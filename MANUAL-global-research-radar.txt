@@ -1,0 +1,170 @@
+=====================================================================
+  MANUAL — GLOBAL-RESEARCH-RADAR  (v2 · alcance global)
+  Radar global de investigación · 1 agente evaluador · Costo $0
+  Estado: pre-implementación
+=====================================================================
+
+1) QUÉ ES
+Repo público que cada día bucea en fuentes de TODO EL MUNDO
+(papers, ensayos clínicos, regulatorio, patentes, financiamiento,
+asociaciones, sociedades científicas), elimina duplicados, y UN
+agente LLM evalúa, filtra y resume. Envío por NTFY a un tópico
+privado. Todo a costo $0.
+
+2) REGLAS FIJAS (no negociables)
+• Costo total $0: solo servicios gratuitos.
+• UNA corrida diaria (cron 0 9 * * *) — cuida todas las cuotas.
+• Sin duplicados: dedup persistente entre corridas.
+• UN solo agente evaluador (no enjambre de LLMs).
+• Canal de salida: NTFY (tópico seguro, definido por el dueño).
+• Repo público → Actions sin consumo de minutos.
+• Fetchers = código determinístico contra APIs/RSS.
+  Los LLMs nunca navegan la web: solo evalúan y resumen.
+
+3) COBERTURA GLOBAL — CÓMO SE LOGRA SIN APIs EXÓTICAS
+Estrategia en 3 capas:
+  a) AGREGADORES GLOBALES: ya indexan investigación de todos los
+     países (incluida China, India, Latinoamérica, África).
+     Con 2-3 de estos, el planeta queda cubierto.
+  b) REGIONALES ESPECÍFICOS: para profundidad donde los
+     agregadores llegan con retraso (Japón, Iberoamérica, África).
+  c) RSS GENÉRICO: asociaciones, sociedades, organismos, ONGs —
+     cualquier sitio con feed. Escala infinita, cero código.
+
+4) FUENTES (todas gratuitas)
+
+  CAPA A — AGREGADORES GLOBALES (fase 1)
+  • OpenAlex ............ 250M+ trabajos, todos los países, sin key.
+                          Filtrable por país/institución. LA base.
+  • Crossref ............ DOI de todos los editores del mundo.
+  • ClinicalTrials.gov .. API v2 (incluye estudios internacionales)
+  • WHO ICTRP ........... agrega 20+ registros nacionales: China,
+                          India, Brasil, Japón, Corea, Australia,
+                          Sudáfrica, Tailandia, Sri Lanka, Alemania...
+  • arXiv / bioRxiv ..... preprints CS + biosciencias (global)
+
+  CAPA B — REGIONALES (fase 2)
+  • SciELO .............. Iberoamérica + Sudáfrica, API pública
+  • J-STAGE ............. Japón, API gratuita
+  • AfricArXiv .......... preprints de África
+  • HAL ................. Francia, API abierta
+  • OpenAIRE ............ agregador UE + global
+  • CORE ................ 300M+ textos completos OA (key gratis)
+  • DOAJ ................ 20k+ journals OA de todo el mundo
+  • Semantic Scholar .... API gratis con key gratuita
+
+  CAPA C — REGULATORIO / PATENTES / FINANCIAMIENTO (fase 3)
+  • openFDA ............. aprobaciones y señales (EEUU)
+  • EMA ................. medicamentos (UE)
+  • WHO Prequalification  medicamentos/medios diagnóstico (global)
+  • ANVISA / TGA / Health Canada ... datos abiertos (BR/AU/CA)
+  • WIPO PATENTSCOPE .... patentes de 100+ oficinas (China, India,
+                          Brasil, EPO, USPTO...) en un solo lugar
+  • NIH RePORTER / NSF .. financiamiento EEUU
+  • CORDIS .............. financiamiento UE (Horizonte Europa)
+  • UKRI Gateway ........ financiamiento Reino Unido
+  • KAKEN (NII) ......... financiamiento Japón, API
+
+  CAPA D — ASOCIACIONES / SOCIEDADES / ORGANISMOS (desde fase 1)
+  • rss_fetcher genérico: lee lista de feeds desde config.
+  • Cada asociación nueva = 1 entrada en sources.yaml. Ejemplos:
+    sociedades científicas (IEEE, ACS, RSC, EMBO...), consorcios,
+    ONGs, organismos (WHO, FAO, UNESCO, OECD newsrooms), labs,
+    fundaciones, observatorios. Cualquier sitio con RSS/Atom.
+  • Sin código nuevo por fuente → expansión a costo cero.
+
+  NOTA: OpenAlex/Crossref ya indexan la producción científica
+  china, india, coreana, etc. Las fuentes regionales (capa B)
+  agregan profundidad y velocidad, no son imprescindibles el día 1.
+
+5) PIPELINE DIARIO (1 corrida, ~5-10 min)
+   1. FETCH      baja novedades de últimas 72 h (ventana global:
+                cuenta husos horarios, por eso 72 y no 24)
+   2. NORMALIZE  compacta: título, fecha, fuente, país/región,
+                abstract recortado (~150 tokens/ítem)
+   3. DEDUP      descarta lo ya visto (state/seen.json)
+   4. CAP        límite por fuente (ej: 50) y total (ej: 300) para
+                proteger cuotas LLM — configurable en sources.yaml
+   5. EVALUATE   el agente puntúa 0-100, filtra ruido, agrupa por
+                rubro y por región del mundo
+   6. DIGEST     top N en Markdown, EN ESPAÑOL (input multilenguaje:
+                EN/ES/PT/ZH... el agente resume al castellano)
+   7. DELIVER    NTFY (top 10) + informe completo en /reports
+   8. PERSIST    commit de state/seen.json + reporte del día
+
+6) DEDUPLICACIÓN (sin repeticiones)
+• Clave: DOI si existe; si no, SHA256 del título normalizado.
+• Anti-casi-duplicados: rapidfuzz (ratio > 92 = mismo ítem).
+  Crítico con cobertura global: el mismo hallazgo aparece en el
+  registro chino, en arXiv y en un press release de una asociación.
+• state/seen.json commiteado en cada corrida = memoria permanente.
+• El digest SOLO incluye ítems nunca enviados antes.
+
+7) AGENTE EVALUADOR (único)
+• Entrada: lista deduplicada y recortada (máx ~300 ítems, en 2-3
+  batches si hace falta).
+• Tareas: puntúa novedad / evidencia / aplicabilidad (0-100),
+  descarta ruido (umbral inicial 70), agrupa por rubro Y por
+  región, redacta resumen ejecutivo < 4000 caracteres en español.
+• Modelo: GitHub Models (gratis, token de GitHub).
+  Fallback automático: Groq free tier.
+• De input multilenguaje → output en castellano siempre.
+
+8) NTFY
+• Tópico seguro definido por el dueño. Vive SOLO en GitHub Secrets
+  (NTFY_TOPIC). Nunca en el código ni en el repo.
+• Envío:
+    curl -s https://ntfy.sh/$NTFY_TOPIC \
+      -H "Title: Radar diario" \
+      -H "Tags: microscope" -H "Markdown: yes" \
+      -H "Actions: view, Informe completo, https://github.com/USER/global-research-radar/tree/main/reports" \
+      --data-binary @digest.md
+• ntfy.sh limita ~4096 bytes → top 10 al celular, informe completo
+  en /reports (accesible con el botón del mensaje).
+
+9) FASE FINAL — MANAGER GENERAL + TELEGRAM (más adelante)
+• Repo "general-manager": único que conversa con vos por Telegram.
+• Orquesta este y otros repos (públicos y privados) vía
+  repository_dispatch y API REST de GitHub.
+• Este radar ya queda preparado: su workflow acepta disparo
+  manual (workflow_dispatch) y por dispatch del manager
+  (types: [rescan, report, status]).
+
+10) SEGURIDAD / HIGIENE (repo público)
+• Secretos: solo GitHub Secrets (NTFY_TOPIC, claves de API si
+  alguna fuente las pide — todas gratuitas).
+• GITHUB_TOKEN con permiso mínimo: contents: write.
+• Respetar rate limits + email en OpenAlex/Crossref (polite pool).
+• El agente prioriza oportunidades; la decisión final es tuya
+  (no es asesoramiento financiero).
+
+11) ESTRUCTURA
+global-research-radar/
+├─ .github/workflows/daily-ingest.yml
+├─ src/fetchers/        openalex.py, whopictrp.py, arxiv.py,
+│                       crossref.py, rss_generic.py ...
+├─ src/pipeline/        normalize.py, dedup.py, caps.py
+├─ src/agent/           evaluator.py   (el único agente)
+├─ src/notify/          ntfy.py
+├─ state/seen.json
+├─ reports/             YYYY-MM-DD.md
+└─ config/sources.yaml  ← TODO aquí: fuentes, caps, umbrales,
+                          lista de RSS de asociaciones
+
+12) CHECKLIST PARA MAÑANA
+□ Crear repo público: global-research-radar
+□ Tópico ntfy seguro + probar curl + suscribirse al tópico
+□ Secret NTFY_TOPIC en el repo
+□ Token GitHub Models (plan B: key Groq)
+□ Workflow con botón manual (workflow_dispatch) para probar ya:
+  OpenAlex + WHO ICTRP + rss_generic → dedup → agente → ntfy
+□ Elegir primeras 5-10 asociaciones para sources.yaml (feeds)
+□ Corrida 2 al día siguiente: verificar dedup (cero repetidos)
+□ Recién ahí: sumar capa B (regional) y capa C (regulatorio)
+
+PRINCIPIO DE EXPANSIÓN: nueva fuente o asociación = 1 entrada en
+sources.yaml, cero código nuevo. El sistema crece por configuración.
+
+NOMBRE DEL REPO: global-research-radar
+(alternativas: research-swarm · open-research-radar · research-sentinel)
+=====================================================================
