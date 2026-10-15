@@ -1,5 +1,6 @@
 =====================================================================
-  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.4 · FASE 1 OPERATIVA)
+  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.5 · FASE 1 CERRADA — MODO
+  AUTOMÁTICO)
   Monitoreo global de todo lo público que se investiga, descubre,
   patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -62,7 +63,7 @@ exacto este sistema la capta. Cobertura: el universo observable.
   los países; el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
   castellano — el multilingüismo NO es barrera.
 
-4) PIPELINE DIARIO (implementado y validado en 8 corridas reales)
+4) PIPELINE DIARIO (implementado y validado en 11 corridas reales)
 FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
   • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
     daily-ingest → Run workflow. Duración típica: 15-20 min.
@@ -74,27 +75,32 @@ FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERS
   • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
     Y dentro de la misma corrida (dos fuentes, misma noticia).
     Validado en vivo: duplicados inter-fuente e inter-corrida
-    cazados (20 exactos + 3 variantes de título en una corrida).
-  • CAPS: round-robin entre fuentes (442 → 220 en prueba real).
-    Ninguna fuente acapara el lote del agente.
+    cazados. En régimen: 445 fetch → ~55-60 genuinamente nuevos.
+  • CAPS: round-robin entre fuentes. Ninguna acapara el lote.
   • EVALUATE: chunks de 20 ítems, ritmo 50s (ver §6). Si un chunk
     falla, esos ítems quedan fuera de ESTA corrida.
   • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por
-    score. El reporte diario es la fuente COMPLETA de verdad.
+    score. 1 archivo por día: la ÚLTIMA corrida del día es la que
+    queda en main — si corrés manual dos veces el mismo día, la
+    segunda reemplaza al reporte de la primera (por diseño). CON
+    EL CRON 1x/DÍA NUNCA SE PISA NADA. Y toda versión anterior de
+    cualquier corrida vive en el git History del archivo (GitHub →
+    reports/ → History) — el histórico completo está preservado
+    gratis y para siempre. El reporte diario es la fuente COMPLETA.
   • NTFY (push diario): top 5 destacados, formato por ítem:
     [score] título original + resumen_es (recortado a 140 chars)
-    + URL. Compacto a propósito: entra entero en la notificación
-    del teléfono (~1.4KB). El detalle íntegro vive en reports/.
-    Title con emojis viaja RFC 2047 (ver §7).
+    + URL. Compacto a propósito (~0.9-1.4KB): entra entero en la
+    notificación del teléfono. El detalle íntegro vive en reports/.
+    Header Click: UN TAP en el push abre el informe del día en
+    GitHub (GITHUB_REPOSITORY la inyecta Actions solo). Acceso
+    histórico a reports/ desde el celular: agregar la carpeta a
+    pantalla de inicio — sin links extra en el push.
   • PERSIST — regla anti-pérdida: SOLO se marca "visto" lo que el
-    agente evaluó de verdad. Lo dejado fuera por caps o por un chunk
-    fallido se borra de la memoria y SE REINTENTA MAÑANA. Si el
-    agente no devuelve NADA, seen.json no se guarda y el lote
-    completo reintenta. Nada se pierde en silencio. (Validado en
-    vivo 3 corridas: 422 y 217 ítems devueltos al radar.)
-    Cada push lleva header Click: un tap abre el informe del día
-    en GitHub. Acceso histórico: carpeta reports/ (agregar a
-    pantalla de inicio) — sin links extra en el push.
+    agente evaluó de verdad. Lo dejado fuera por caps o por un
+    chunk fallido se borra de la memoria y SE REINTENTA MAÑANA.
+    Si el agente no devuelve NADA, seen.json no se guarda y el
+    lote completo reintenta. Nada se pierde en silencio.
+    (Validado en vivo 4 corridas seguidas.)
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
   caps.per_source: 50 · caps.total: 300 · threshold: 70/100
@@ -108,8 +114,8 @@ Nunca más corridas.
 6) AGENTE EVALUADOR (v3.3 — anti-rotación, TPM-aware, reasoning-safe)
   PROVEEDORES (en orden, ambos $0):
     1. Groq ........ GROQ_API_KEY — clave validada (catálogo 11
-                     modelos). PRIMARIO. Sirvió las últimas 3
-                     corridas completas con openai/gpt-oss-120b.
+                     modelos). PRIMARIO. Sirvió el 100% de los
+                     chunks en las corridas 7 y 11 (gpt-oss-120b).
     2. GitHub Models  GITHUB_TOKEN del workflow (models: read) —
                      FALLBACK. Ojo: su /catalog no siempre responde
                      desde runners → si falla, intenta a ciegas
@@ -126,7 +132,8 @@ Nunca más corridas.
     • Free tier Groq: 8.000 tokens/minuto POR MODELO.
     • CHUNK = 20 ítems/llamada (~2.5k tokens) — nunca más grande.
     • Resumen en payload recortado a 200 chars, título a 150.
-    • Pausa 50s entre chunks: validada — corrida 7 con CERO 429.
+    • Pausa 50s entre chunks: validada — corridas 7 y 11 con
+      CERO 429.
     • Ante 429: espera 65s y reintenta ×3 (ventana de un minuto).
     • Cascada: prueba hasta 3 modelos de Groq — si el TPM de uno
       está agotado, el siguiente puede responder al instante.
@@ -137,7 +144,8 @@ Nunca más corridas.
       truncado (causa de 10/11 chunks perdidos en la corrida 6).
     • Fix: payload con reasoning_effort=low para todo modelo
       gpt-oss + max_tokens 4000 + resumen_es limitado a 25 palabras.
-    • Validado: de 10/11 chunks perdidos a 1 parcial en corrida 7.
+    • Validado: de 10/11 chunks perdidos a 1 parcial (corrida 7) a
+      0 fallos (corrida 11: 52/52 evaluados).
   RESPECTO AL JSON (defensa en profundidad):
     • Prompt prohíbe markdown y ``` (bloques de código).
     • Parseo tolerante a fences igualmente.
@@ -182,13 +190,15 @@ global-research-radar/
 │  │                     openalex.py, arxiv.py, rss_generic.py
 │  ├─ pipeline/          normalize.py, dedup.py, caps.py
 │  ├─ agent/             evaluator.py (v3.3 TPM + reasoning aware)
-│  └─ notify/            ntfy.py (Title RFC 2047)
+│  └─ notify/            ntfy.py (Title RFC 2047 + header Click)
 ├─ run.py                orquestador completo + persist selectivo +
-│                          push compacto (top 5, resumen 140 chars)
-├─ state/seen.json       memoria permanente (se commitea cada corrida)
-├─ reports/              AAAA-MM-DD.md por corrida — fuente completa
+│                          push compacto (top 5, resumen 140) + Click
+├─ state/seen.json       memoria permanente (se commitea cada corrida;
+│                          autolimitada a 100k registros ≈ 7 meses)
+├─ reports/              AAAA-MM-DD.md por corrida — fuente completa;
+│                          1 archivo/día, histórico en git History
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.4)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.5)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -197,9 +207,10 @@ global-research-radar/
       groq: catálogo OK (1 vez) → agente servido por Groq (modelo) →
       agente: chunk i/j → reporte escrito → ntfy: enviado → push 📱
   • La corrida tarda 15-20 min: es el free tier mandando el ritmo.
-  • El push muestra los 5 mejores del día; el informe completo está
-    en reports/AAAA-MM-DD.md (todos los ítems sobre umbral, con
-    rubro, región y resumen íntegro).
+  • El push muestra los 5 mejores del día; TOCAR la notificación
+    abre el informe completo en GitHub; el archivo está en
+    reports/AAAA-MM-DD.md (todos los ítems sobre umbral, con rubro,
+    región y resumen íntegro).
   • Agregar fuente RSS: 1 línea en sources.yaml (name, url, lang).
   • Ajustar: threshold ↑ menos ruido · caps.total ↑ más cobertura ·
     openalex.days_back ↑ más ventana.
@@ -218,10 +229,14 @@ global-research-radar/
       latin-1 codec error ..... emojis en headers → Title ya viaja
                                 RFC 2047; si se viera, ntfy.py viejo
       push cortado a mitad de ítem . el texto excede lo que la
-                                notificación muestra; el mensaje
-                                íntegro queda en la app y en
-                                reports/. Fix aplicado: top_n 5 +
-                                resumen recortado a 140 chars.
+                                notificación muestra. Fix aplicado:
+                                top_n 5 + resumen recortado 140.
+      IndentationError ........ pegado parcial de un .py → R1:
+                                reemplazar el archivo COMPLETO
+      corrida manual el mismo día . el reporte del día se regenera
+                                (última gana); la versión anterior
+                                queda en git History. Con cron 1x/
+                                día nunca ocurre.
       github models: catálogo no disponible — normal, cae a ciegas
       sin push, corrida verde . normal: nada superó el umbral
 
@@ -258,23 +273,36 @@ global-research-radar/
   Corrida 7: VERDE COMPLETA (2026-10-15). Cero 429 (pausa 50s clavó
              el TPM). 11/11 chunks, 205/209 evaluados (98%). Chunk 10
              truncado → salvamento rescató 16/16 (solo 4 a reintento).
-             ntfy: enviado (1333 bytes), push recibido en el teléfono
-             con los 10 destacados. Commit de memoria e informes OK.
-             Dedup fuzzy inter-corrida: 23 cazados. FASE 1 CERRADA.
+             ntfy: enviado (1333 bytes), push recibido. Commit de
+             memoria e informes OK. Dedup fuzzy inter-corrida: 23
+             cazados. FASE 1 CERRADA (primera vez).
   Corrida 8: push con detalle en español (resumen_es agregado al
              body): formato validado — título original en inglés
              (identificador exacto para búsqueda/cita) + resumen
              castellano + URL. Pero la NOTIFICACIÓN se cortó a mitad
              de un ítem: el cuerpo (~2.5KB con resúmenes) excede lo
-             que la burbuja de Android muestra. Mensaje íntegro
-             quedaba en la app y en reports/.
+             que la burbuja de Android muestra.
     Fix v3.4: push compacto — top_n 10→5 + resumen_es recortado a
-    140 chars en el push (íntegro en reports/). ~1.4KB por push:
-    el formato de la corrida 7, ya probado que llega entero.
-  Corrida 9: VERIFICACIÓN del push compacto — VERIFICADA al cierre de
-             esta edición del manual.
+    140 chars en el push (íntegro en reports/). ~1.4KB por push.
+  Corrida 9: VERIFICACIÓN del push compacto — COMPLETA Y SIN CORTES.
+  Corrida 10: IndentationError en ntfy.py al aplicar el fix del
+              header Click por edición de fragmentos en el editor
+              web. El crash fue en el import — no corrió nada,
+              estado intacto.
+    Fix: R1 reforzada — archivos Python SIEMPRE se reemplazan
+    completos (Ctrl+A → pegar), nunca por fragmentos. Re-pase
+    completo de ntfy.py y run.py.
+  Corrida 11: VERDE PERFECTA — CIERRE DE FASE 1 (2026-10-15). Modo
+              estacionario del radar: 445 fetch → 389 filtrados por
+              memoria → 56 genuinamente nuevos → caps 52 → 3/3
+              chunks → 52/52 evaluados (100%, cero 429, cero
+              truncados) → reporte → ntfy 888 bytes con header
+              Click → persist: 4 a reintento. El sistema ya solo
+              procesa lo nuevo del planeta y la memoria hace el
+              resto. Push y Click verificados en el teléfono.
   REGLAS DEL PROYECTO (aprendidas en vivo):
-    R1. Archivos Python se pegan COMPLETOS, de una sola vez.
+    R1. Archivos Python se pegan COMPLETOS, de una sola vez
+        (Ctrl+A → pegar). Nunca por fragmentos.
     R2. Nunca hardcodear nombres de modelos: consultar catálogo real.
     R3. El free tier manda el ritmo: dosis pequeña + pausa larga.
     R4. Todo error HTTP loguea status + cuerpo — nunca fallar a ciegas.
@@ -287,46 +315,79 @@ global-research-radar/
     R9. El push es un teaser, no el informe: compacto por diseño
         (top 5, resumen 140 chars). El detalle íntegro vive en
         reports/ — nunca competir con el límite de la notificación.
-    R10. IndentationError en ntfy.py al aplicar el fix del Click
-              por edición de fragmentos en el editor web.
-    Refuerzo de R1: los archivos Python SIEMPRE se reemplazan
-    completos (Ctrl+A → pegar), nunca por fragmentos.
+    R10. El reporte diario se regenera en cada corrida del día
+         (última gana) — el histórico completo lo preserva el git
+         History. El push es efímero; reports/ y git son el archivo.
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
-  FASE 1 (núcleo) .... ✅ CERRADA — corrida verde 2026-10-15
-                       (205/209 evaluados, reporte + commit + push OK)
+  FASE 1 (núcleo) .... ✅ CERRADA Y OPERATIVA — corrida 11 verde
+                       (2026-10-15). Modo automático desde el 16.
   FASE 2 (biosalud) .. ⏳ WHO ICTRP + ClinicalTrials + openFDA
   FASE 3 (inventos) .. ⏳ PATENTSCOPE + PatentsView + Lens
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST v3.4
+12) CHECKLIST v3.5
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.4)
-[x] Secret NTFY_TOPIC creado y probado (push OK)
+[x] Manual actualizado (este archivo, v3.5)
+[x] Secret NTFY_TOPIC creado y probado (push OK; valor no documentado)
 [x] Workflow permissions: read and write
 [x] polite_email real en sources.yaml
 [x] Código fase 1 completo (15 archivos)
 [x] Secret GROQ_API_KEY creado y validado
 [x] GITHUB_TOKEN mapeado en env del workflow
-[x] Agente v3.2 TPM-aware: probado en vivo (catálogo + cascada OK)
-[x] Primera evaluación real + regla anti-pérdida probada (3 corridas)
-[x] Agente v3.3: reasoning_effort=low + salvamento JSON — validado
-    (corrida 7: 11/11 chunks, 205/209, cero 429)
-[x] ntfy.py: Title RFC 2047, emojis seguros — validado (corrida 7)
-[x] CORRIDA VERDE FINAL (2026-10-15): 205/209 evaluados (98%) ·
-    reporte + commit de memoria + push al teléfono
+[x] Agente v3.3: TPM-aware + reasoning_effort=low + salvamento JSON
+    — validado (corridas 7 y 11: 205/209 y 52/52, cero 429)
+[x] ntfy.py: Title RFC 2047 (emojis seguros) — validado
+[x] Corrida verde final (2026-10-15): 205/209 evaluados · reporte +
+    commit + push al teléfono
 [x] Push con detalle en español: título EN + resumen_es + URL
-[x] Push compacto anti-corte: top_n 5 + resumen 140 chars (v3.4)
-[x] Verificación corrida 9: push llega completo y sin cortes
-    ← EN CURSO al generar este manual; marcar [x] al confirmar
-[x] Push con Click → abre el informe del día (acceso móvil sin links)
+[x] Push compacto anti-corte: top_n 5 + resumen 140 — verificado
+    (888 bytes, entero en la notificación)
+[x] Header Click: un tap en el push abre el informe del día —
+    verificado en el teléfono
+[x] Regla anti-pérdida validada en 4 corridas seguidas
+[x] Modo estacionario comprobado (corrida 11): 445 → 56 nuevos →
+    52/52 evaluados
+[x] Dudas de archivado resueltas: cron 1x/día no pisa nada;
+    corridas manuales del mismo día se reemplazan (por diseño) y
+    el git History preserva TODO el histórico
 [ ] Primera semana en automático: observar 3-4 corridas del cron
-    (memoria, duplicados, horario) antes de expansión mayor
+    (memoria, duplicados, horario)
 [ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
 [ ] Fase 2 (biosalud): WHO ICTRP + ClinicalTrials + openFDA
+[ ] (opcional) Retención 180 días de reports/ (ver §13, snippet listo)
 [ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
+
+13) EXTRAS LISTOS PARA ACTIVAR (fases futuras)
+  RETENCIÓN 180 DÍAS de reports/ — reemplazar el paso "Commit de
+  memoria e informes" del workflow por este bloque cuando se quiera:
+      - name: Commit de memoria e informes
+        run: |
+          # retención: eliminar informes con más de 180 días
+          # (por fecha del NOMBRE — NO find -mtime: el checkout
+          # de Actions renueva los mtimes de todos los archivos)
+          cutoff=$(date -d "-180 days" +%Y-%m-%d)
+          for f in reports/????-??-??.md; do
+            [ -e "$f" ] || continue
+            d=$(basename "$f" .md)
+            if [[ "$d" < "$cutoff" ]]; then
+              rm "$f"
+              echo "retención: eliminado $f"
+            fi
+          done
+          git config user.name "radar-bot"
+          git config user.email "actions@github.com"
+          git add state/seen.json reports/ || true
+          git diff --cached --quiet || git commit -m "radar: corrida $(date -u +%F)"
+          git push
+  Nota: borrar un reporte del main NO borra su pasado — la versión
+  sigue en el git History. seen.json además se autolimita solo
+  (MAX_SEEN = 100.000 registros ≈ 7 meses a este volumen).
+  BLINDAJE NTFY (opcional): cuenta gratis en ntfy.sh → reservar el
+  topic → crear access token → secret NTFY_TOKEN (ntfy.py ya lo
+  soporta: si el secret existe, agrega Authorization Bearer).
 
 NOMBRE DEL REPO: global-research-radar
 =====================================================================
