@@ -1,5 +1,5 @@
 =====================================================================
-  MANUAL — GLOBAL-RESEARCH-RADAR  (v3 · COBERTURA TOTAL DEL GLOBO)
+  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.1 · FASE 1 IMPLEMENTADA)
   Monitoreo global de todo lo público que se investiga, descubre,
   patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -18,141 +18,162 @@ Se monitorea TODO lo público. La investigación confidencial
 ninguna fuente hasta que se publica o patenta — y en ese momento
 exacto este sistema la capta. Cobertura: el universo observable.
 
-3) MAPA DE FUENTES — POR DOMINIO (todas gratuitas)
+3) MAPA DE FUENTES — POR DOMINIO
+(✅ = activo hoy · ⏳ = fase futura)
 
-  A. INVESTIGACIÓN CIENTÍFICA (todos los campos, todos los países)
-  • OpenAlex ......... ~250M trabajos, indexa producción mundial
-                       (incluye China, India, LatAm, África).
-                       LA columna vertebral. Sin key.
-  • Crossref ......... DOI de todos los editores del planeta
-  • BASE ............. 350M+ docs de 11k repositorios institucionales
-  • Semantic Scholar . API gratis con key gratuita
-  • OpenAIRE ......... agregador UE + global
-  • CORE ............. 300M+ textos completos OA (key gratis)
-  • DOAJ ............. 20k+ journals OA de todo el mundo
+  A. INVESTIGACIÓN CIENTÍFICA
+  ✅ OpenAlex ......... columna vertebral (~250M trabajos, todos
+                       los países). Sin key. Polite pool.
+  ⏳ Crossref · BASE · Semantic Scholar · OpenAIRE · CORE · DOAJ
 
-  B. PREPRINTS (lo más nuevo, antes de revisión por pares)
-  • arXiv (física/CS/mate) · bioRxiv · medRxiv · chemRxiv
-  • SSRN · PsyArXiv · EngRxiv · AgriRxiv
-  • AfricArXiv (África) · HAL (Francia) · J-STAGE (Japón)
-  • SciELO (Iberoamérica + Sudáfrica)
+  B. PREPRINTS
+  ✅ arXiv ........... categorías cs.AI, cs.LG, q-bio.QB, q-bio.BM,
+                       physics.app-ph (desde sources.yaml)
+  ⏳ bioRxiv · medRxiv · chemRxiv · SSRN · HAL · J-STAGE · SciELO ·
+     AfricArXiv · PsyArXiv · EngRxiv · AgriRxiv
 
-  C. DESCUBRIMIENTOS Y ANUNCIOS (press, institutos, sociedades)
-  • EurekAlert! ...... comunicados de miles de universidades e
-                       institutos del mundo entero
-  • RSS genérico ..... Nature, Science, Phys.org, Scientific
-                       American + feed de CUALQUIER instituto:
-                       CERN, Max Planck, CNRS, RIKEN, CAS (China),
-                       CSIC, CONICET, ICGEB, EMBO, IEEE, ACS, RSC...
-                       1 asociación nueva = 1 línea en sources.yaml
+  C. DESCUBRIMIENTOS Y ANUNCIOS
+  ✅ RSS genérico ..... Nature, Science, Phys.org, Ars Technica,
+                       MIT Tech Review. 1 feed nuevo = 1 línea.
+  ⏳ EurekAlert! · CERN · Max Planck · CNRS · RIKEN · CAS · CSIC ·
+     CONICET · ICGEB · EMBO · IEEE · ACS · RSC
 
-  D. PATENTES E INVENTOS (cobertura 100+ oficinas)
-  • WIPO PATENTSCOPE .. un solo punto: China (CNIPA), EPO, USPTO,
-                        Japón (JPO), Corea (KIPO), India, Brasil,
-                        Canadá, Australia + 100 oficinas más
-  • USPTO PatentsView . API gratis con key
-  • EPO OPS ........... API gratis con key
-  • Lens.org .......... patentes VINCULADAS a papers (key gratis
-                        para uso no comercial) — joya poco usada
+  D. PATENTES (100+ oficinas) ⏳ fase 3
+     WIPO PATENTSCOPE · USPTO PatentsView · EPO OPS · Lens.org
 
-  E. MEDICAMENTOS · ENSAYOS · REGULATORIO
-  • WHO ICTRP ......... agrega registros nacionales de ensayos de
-                        China (ChiCTR), India, Brasil (ReBEC), Japón,
-                        Corea, Alemania, Holanda, Tailandia, Perú,
-                        Cuba, Sri Lanka, Australia, Sudáfrica...
-  • ClinicalTrials.gov  API v2 (internacional)
-  • openFDA ........... aprobaciones, dispositivos, recalls (EEUU)
-  • EMA ............... medicamentos (UE)
-  • WHO Prequalification  medicamentos/diagnóstico global
-  • ANVISA (BR) · TGA (AU) · Health Canada · PMDA (Japón)
+  E. MEDICAMENTOS · ENSAYOS · REGULATORIO ⏳ fase 2
+     WHO ICTRP · ClinicalTrials.gov v2 · openFDA · EMA · WHO PQ ·
+     ANVISA · TGA · Health Canada · PMDA
 
-  F. BIOSCIENCIAS PROFUNDAS
-  • NCBI .............. PubMed, GenBank, RefSeq, SRA (nuevas
-                        secuencias/genomas)
-  • EMBL-EBI .......... Europe PMC, UniProt, Ensembl
-  • bioRxiv/medRxiv ... ya en B
+  F. BIOSCIENCIAS PROFUNDAS ⏳
+     NCBI (PubMed, GenBank, SRA) · EMBL-EBI (Europe PMC, UniProt)
 
-  G. NUEVA TECNOLOGÍA · INVENTOS · FRONTERA
-  • GitHub API ........ repos y topics emergentes
-  • Hacker News (Algolia API) ... detección temprana de tech
-  • Product Hunt ...... API gratuita
-  • RSS: IEEE Spectrum, TechCrunch, Ars Technica
-  • Crowdfunding RSS .. Kickstarter/Indiegogo por categoría
-                        (hardware/inventos antes de existir)
-  • ARPA-E, DARPA, EU EIC, ARIA UK ... tech frontera financiada
+  G. NUEVA TECNOLOGÍA ⏳ fase 5
+     GitHub API · HN (Algolia) · Product Hunt · crowdfunding ·
+     ARPA-E · DARPA · EU EIC · ARIA UK
 
-  H. FINANCIAMIENTO = PREDICCIÓN (lo que se investigará mañana)
-  • NIH RePORTER (EEUU) · NSF (EEUU) · SBIR.gov
-  • CORDIS / Horizonte Europa (UE) · ERC
-  • UKRI (Reino Unido) · KAKEN (Japón) · ARC (Australia)
-  • Wellcome Trust · Gates Foundation
+  H. FINANCIAMIENTO = PREDICCIÓN ⏳ fase 4
+     NIH RePORTER · NSF · SBIR · CORDIS/ERC · UKRI · KAKEN · ARC ·
+     Wellcome · Gates
 
-  GEOGRAFÍA — CÓMO SE CUBRE TODO EL PLANETA:
-  • Los agregadores (A) ya indexan producción de todos los países
-  • PATENTSCOPE (D) trae 100+ oficinas en una API
-  • ICTRP (E) trae 20+ registros nacionales de ensayos
-  • RSS (C) conecta cualquier instituto/región que quieras sumar
-  • IDIOMAS: el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
-    castellano — el multilingüismo NO es barrera.
+  GEOGRAFÍA/IDIOMAS: los agregadores ya indexan producción de todos
+  los países; el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
+  castellano — el multilingüismo NO es barrera.
 
-4) PIPELINE DIARIO (1 corrida, cron 0 9 * * *)
-   FETCH → NORMALIZE → DEDUP → CAP → EVALUATE → DIGEST → NTFY
-   → PERSIST   (igual que v2, sin cambios)
+4) PIPELINE DIARIO (implementado)
+FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
+  • Cron: 0 9 * * * (09:00 UTC = 06:00 Argentina). GitHub puede
+    atrasarlo ~15 min en horas pico.
+  • Botón manual: Actions → daily-ingest → Run workflow.
+  • FETCH: cada fuente con try propio — una caída NO frena la
+    corrida. HTTP con reintentos y backoff exponencial.
+  • NORMALIZE: esquema único + id estable (doi:... si hay DOI,
+    si no sha256 del título normalizado).
+  • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
+    Y dentro de la misma corrida (dos fuentes, misma noticia).
+  • CAPS: round-robin entre fuentes — ninguna acapara el lote.
+  • EVALUATE: agente en chunks de 60 ítems, pausa 2s entre chunks.
+    Si un chunk falla, esos ítems quedan fuera de ESTA corrida;
+    si NO hay veredictos, seen.json NO se guarda → el lote completo
+    se reintenta solo al día siguiente (nada se pierde).
+  • DIGEST: reports/AAAA-MM-DD.md, agrupado por rubro.
+  • NTFY: solo si hay ítems sobre el umbral. Top 10 (~4KB).
+  • PERSIST: seen.json + reporte commiteados ("radar: corrida
+    AAAA-MM-DD") — solo si hubo cambios.
 
-5) EL PROBLEMA DEL VOLUMEN (crítico con cobertura total)
-El planeta produce ~15k papers/día, ~10k patentes/día y mucho más.
-Por eso el sistema tiene 3 válvulas (config/sources.yaml):
-  • caps.per_source  ej: 50
-  • caps.total       ej: 300 ítems/corrida al agente
-  • threshold        ej: 70/100 — el agente descarta ruido
-El agente NO resume todo: SELECCIONA lo mejor del día. Si querés
-ver más, subís caps/threshold en el yaml — nunca más corridas.
+5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
+  caps.per_source: 50  ·  caps.total: 300  ·  threshold: 70/100
+  openalex: days_back 2 · per_page 100 · max_pages 2
+  arxiv: max_results 100
+  notify: top_n 10 · max_bytes 4096
+El agente NO resume todo: SELECCIONA lo mejor del día. Más
+cobertura = subir caps/days_back. Menos ruido = subir threshold.
+Nunca más corridas.
 
-6) DEDUP · AGENTE · NTFY · MANAGER
-Sin cambios respecto a v2:
-  • Dedup por DOI / SHA256 de título normalizado + rapidfuzz >92
-  • state/seen.json commiteado cada corrida (memoria permanente)
-  • UN agente evaluador (GitHub Models, fallback Groq), salida en
-    español, agrupando por rubro y por región
-  • NTFY top 10 (~4KB) + informe completo en /reports
-  • Fase final: manager general + Telegram via repository_dispatch
-  • Workflow acepta workflow_dispatch (manual) y rescan del manager
+6) AGENTE EVALUADOR (implementado)
+  • Primario: GitHub Models — openai/gpt-4o-mini — autenticado con
+    el GITHUB_TOKEN del workflow (permiso models: read) → $0.
+  • Fallback: Groq llama-3.3-70b-versatile — SOLO si existe el
+    secret GROQ_API_KEY (opcional, hoy no creado).
+  • Salida SIEMPRE en español: score 0-100 + rubro + región +
+    resumen_es por ítem. JSON tolerante a fences ```; ítems sin
+    veredicto se descartan de la corrida.
+  • Rubros: investigacion | preprint | descubrimiento | patente |
+    salud | tech | financiamiento | otro
+  • Regiones: America Latina | Norteamerica | Europa | Asia |
+    Africa | Oceania | Global
 
-7) SEGURIDAD
-  • Secretos solo en GitHub Secrets (NTFY_TOPIC, API keys gratis)
-  • GITHUB_TOKEN: permiso mínimo contents: write
-  • Polite pool en OpenAlex/Crossref (email registrada)
-  • No es asesoramiento financiero/médico: prioriza, vos decidís
+7) SEGURIDAD (estado real)
+  • Secrets en GitHub Secrets:
+      NTFY_TOPIC .... CREADO y probado (valor no documentado)
+      NTFY_TOKEN .... opcional (blindaje: topic reservado + token)
+      GROQ_API_KEY .. opcional (fallback del agente)
+  • GITHUB_TOKEN: permisos mínimos declarados en el workflow:
+      contents: write (commits de state/reports) + models: read.
+  • ntfy.sh público: cualquiera que conozca el nombre del topic
+    puede leer. Mitigación aplicada: topic largo + aleatorio.
+    Blindaje total opcional: topic reservado + NTFY_TOKEN.
+  • Polite pool: polite_email en sources.yaml identifica ante
+    OpenAlex/Crossref (mejores rate limits).
+  • No es asesoramiento financiero/médico: prioriza, vos decidís.
 
-8) ESTRUCTURA
+8) ESTRUCTURA (real, en el repo)
 global-research-radar/
-├─ .github/workflows/daily-ingest.yml
-├─ src/fetchers/    openalex.py, patentscope.py, whopictrp.py,
-│                   openfda.py, arxiv.py, rss_generic.py, ...
-├─ src/pipeline/    normalize.py, dedup.py, caps.py
-├─ src/agent/       evaluator.py
-├─ src/notify/      ntfy.py
-├─ state/seen.json
-├─ reports/         YYYY-MM-DD.md
-├─ config/sources.yaml   ← TODO el radar se controla desde acá
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3)
+├─ .github/workflows/daily-ingest.yml  ← cron + botón manual
+├─ config/sources.yaml                 ← TODO el radar se controla acá
+├─ src/
+│  ├─ config.py          carga del YAML
+│  ├─ smoke.py           prueba de fetchers sin agente (opcional)
+│  ├─ fetchers/          common.py, openalex.py, arxiv.py,
+│  │                     rss_generic.py
+│  ├─ pipeline/          normalize.py, dedup.py, caps.py
+│  ├─ agent/             evaluator.py
+│  └─ notify/            ntfy.py
+├─ run.py                orquestador completo (punto de entrada)
+├─ state/seen.json       memoria permanente (se commitea)
+├─ reports/              AAAA-MM-DD.md por corrida
+├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.1)
 
-9) PLAN DE ACTIVACIÓN POR FASES (una cosa a la vez)
-  Fase 1 (núcleo) ...... OpenAlex + arXiv + RSS genérico
-  Fase 2 (biosalud) .... WHO ICTRP + ClinicalTrials + openFDA
-  Fase 3 (inventos) .... PATENTSCOPE + PatentsView + Lens
-  Fase 4 (predicción) .. RePORTER + NSF + CORDIS
-  Fase 5 (tech) ........ GitHub + HN + Product Hunt + crowdfunding
-  Cada fase solo se suma cuando la anterior corre limpia y sin
-  duplicados. La expansión total es cuestión de semanas.
+9) OPERACIÓN (chuleta)
+  • Correr manual: Actions → daily-ingest → Run workflow → Run.
+  • Leer el paso "Correr radar" en este orden:
+      fetch total: N ítems → dedup: X nuevos / Y ya vistos →
+      caps: A → B ítems → agente: chunk i/j → reporte escrito →
+      ntfy: enviado
+  • Agregar fuente RSS: 1 línea en sources.yaml (name, url, lang).
+    Feed caído = warning en el log, la corrida sigue.
+  • Ajustar: threshold ↑ (menos ruido) · caps.total ↑ (más
+    cobertura) · openalex.days_back ↑ (más ventana).
+  • Síntomas comunes:
+      openalex: 0 ítems ....... revisar polite_email (placeholder?)
+      rss: falló (404) ........ URL muerta → reemplazar en yaml
+      agente sin veredictos ... seen no se guarda, reintenta solo
+      ntfy: falló, resto OK ... revisar secret NTFY_TOPIC
+      sin push, corrida verde . normal: nada superó el umbral
 
-10) CHECKLIST ACTUALIZADO
+10) PLAN DE FASES (regla: la siguiente solo cuando la anterior
+    corre limpia y sin duplicados)
+  FASE 1 (núcleo) .... ✅ IMPLEMENTADA — en validación de la
+                       primera corrida
+  FASE 2 (biosalud) .. ⏳ WHO ICTRP + ClinicalTrials + openFDA
+  FASE 3 (inventos) .. ⏳ PATENTSCOPE + PatentsView + Lens
+  FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
+  FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
+
+11) CHECKLIST v3.1
 [x] Repo público global-research-radar creado
-[x] Manual v3 guardado (este archivo)
-[ ] Secret NTFY_TOPIC
-[ ] Workflow permissions: read and write
-[ ] Código fase 1: fetchers OpenAlex/arXiv/RSS + dedup + agente
-    + workflow con botón manual de prueba
+[x] Manual actualizado (este archivo, v3.1)
+[x] Secret NTFY_TOPIC creado y probado (push OK al teléfono)
+[x] Workflow permissions: read and write
+[x] Código fase 1 completo: fetchers + pipeline + agente + ntfy +
+    run.py + workflow con botón manual
+[ ] Verificar polite_email real en sources.yaml (no placeholder)
+[ ] Primera corrida manual verde + push en el teléfono
+[ ] Ajuste fino threshold/caps con datos reales de ruido
+[ ] Fase 2: WHO ICTRP + ClinicalTrials.gov + openFDA
+[ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
+[ ] (opcional) Fallback Groq: secret GROQ_API_KEY
 
 NOMBRE DEL REPO: global-research-radar
 =====================================================================
