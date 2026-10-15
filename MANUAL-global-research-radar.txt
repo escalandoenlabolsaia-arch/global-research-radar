@@ -239,6 +239,12 @@ global-research-radar/
     resumen_es ≤25 palabras, salvamento de JSON truncado por regex
     (pierde 0-1, no 20), catálogo consultado 1 vez por corrida,
     Title ntfy como RFC 2047.
+  Corrida 7: VERDE COMPLETA (2026-10-15). Cero 429 (pausa 50s clavó
+             el TPM). 11/11 chunks, 205/209 evaluados (98%). Chunk 10
+             truncado → salvamento rescató 16/16 (solo 4 a reintento).
+             ntfy: enviado (1333 bytes), push con 🔬 vía RFC 2047 ✓.
+             Dedup fuzzy inter-corrida: 23 cazados (20 exactos + 3
+             variantes). FASE 1 CERRADA.
   REGLAS DEL PROYECTO (aprendidas en vivo):
     R1. Archivos Python se pegan COMPLETOS, de una sola vez.
     R2. Nunca hardcodear nombres de modelos: consultar catálogo real.
@@ -253,7 +259,8 @@ global-research-radar/
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
-  FASE 1 (núcleo) .... 🔶 CÓDIGO COMPLETO — falta corrida verde final
+  FASE 1 (núcleo) .... ✅ CERRADA — corrida verde 2026-10-15
+                       (205/209 evaluados, reporte + commit + push OK)
   FASE 2 (biosalud) .. ⏳ WHO ICTRP + ClinicalTrials + openFDA
   FASE 3 (inventos) .. ⏳ PATENTSCOPE + PatentsView + Lens
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
