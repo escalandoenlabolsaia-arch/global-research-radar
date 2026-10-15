@@ -1,7 +1,10 @@
 """Fetcher OpenAlex — columna vertebral (~250M trabajos, todos los países).
-Sin API key. Polite pool vía mailto del config. Paginación por cursor.
+Sin API key. Polite pool vía mailto del config.
+Paginación por `page` (la de cursor dio 401 en runners) y páginas tolerantes:
+si una página falla, se devuelve lo acumulado — nunca 0 ítems por un 401.
 """
 import logging
+import os
 import time
 from datetime import date, timedelta
 
@@ -64,28 +67,35 @@ def fetch(cfg):
     per_page = min(int(oa.get("per_page", 100)), 200)
     max_pages = int(oa.get("max_pages", 2))
     email = cfg.get("polite_email", "")
+    api_key = os.environ.get("OPENALEX_API_KEY", "")  # opcional, hoy vacío
 
     desde = (date.today() - timedelta(days=days_back)).isoformat()
-    params = {
+    base = {
         "filter": f"from_publication_date:{desde}",
         "sort": "publication_date:desc",
         "select": SELECT,
         "per-page": per_page,
         "mailto": email,
     }
+    if api_key:
+        base["api_key"] = api_key
 
     items = []
-    cursor = "*"
-    for _ in range(max_pages):
-        data = get(API, params=dict(params, cursor=cursor), timeout=60).json()
-        for w in data.get("results", []):
+    for page in range(1, max_pages + 1):
+        try:
+            data = get(API, params=dict(base, page=page), timeout=60).json()
+        except Exception as e:
+            log.warning("openalex: página %d falló — sigo con %d ítems parciales",
+                        page, len(items))
+            break
+        results = data.get("results", [])
+        for w in results:
             try:
                 items.append(_to_item(w))
             except Exception as e:
                 log.warning("openalex: ítem descartado (%s)", e)
-        cursor = (data.get("meta") or {}).get("next_cursor")
-        if not cursor:
-            break
+        if len(results) < per_page:
+            break  # última página disponible
         time.sleep(0.2)
     log.info("openalex: %d ítems (desde %s)", len(items), desde)
     return items
