@@ -4,7 +4,7 @@
 # =========================================================
 
 # Email para polite pool de OpenAlex/Crossref (mejora rate limits)
-polite_email: "escalandoenlabolsaia@gmail.com"   # ← REEMPLAZAR por tu email real
+polite_email: "TU_EMAIL@ejemplo.com"   # ← REEMPLAZAR por tu email real
 
 caps:
   per_source: 50      # máx ítems por fuente por corrida
@@ -38,3 +38,9 @@ rss:
     - { name: "Phys.org",         url: "https://phys.org/rss-feed/",                      lang: en }
     - { name: "Ars Technica",     url: "https://feeds.arstechnica.com/arstechnica/index", lang: en }
     - { name: "MIT Tech Review",  url: "https://www.technologyreview.com/feed/",          lang: en }
+
+agent:
+  # Vacío = auto-descubre el mejor modelo disponible en cada corrida.
+  # Solo llenar si algún día querés fijar un modelo a mano.
+  groq_model: ""
+  github_model: ""
