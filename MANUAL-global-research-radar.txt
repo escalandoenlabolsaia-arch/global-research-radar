@@ -1,5 +1,5 @@
 =====================================================================
-  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.1 · FASE 1 IMPLEMENTADA)
+  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.2 · FASE 1 — VALIDACIÓN FINAL)
   Monitoreo global de todo lo público que se investiga, descubre,
   patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -23,18 +23,20 @@ exacto este sistema la capta. Cobertura: el universo observable.
 
   A. INVESTIGACIÓN CIENTÍFICA
   ✅ OpenAlex ......... columna vertebral (~250M trabajos, todos
-                       los países). Sin key. Polite pool.
+                       los países). Sin key. Polite pool. Paginación
+                       por página numérica, tolerante por página.
   ⏳ Crossref · BASE · Semantic Scholar · OpenAIRE · CORE · DOAJ
 
   B. PREPRINTS
-  ✅ arXiv ........... categorías cs.AI, cs.LG, q-bio.QB, q-bio.BM,
+  ✅ arXiv ........... cs.AI, cs.LG, q-bio.QB, q-bio.BM,
                        physics.app-ph (desde sources.yaml)
   ⏳ bioRxiv · medRxiv · chemRxiv · SSRN · HAL · J-STAGE · SciELO ·
      AfricArXiv · PsyArXiv · EngRxiv · AgriRxiv
 
   C. DESCUBRIMIENTOS Y ANUNCIOS
-  ✅ RSS genérico ..... Nature, Science, Phys.org, Ars Technica,
-                       MIT Tech Review. 1 feed nuevo = 1 línea.
+  ✅ RSS genérico ..... 5 feeds vivos: Nature (75), Phys.org (30),
+                       Ars Technica (20), Science (10), MIT TR (10).
+                       1 feed nuevo = 1 línea en sources.yaml.
   ⏳ EurekAlert! · CERN · Max Planck · CNRS · RIKEN · CAS · CSIC ·
      CONICET · ICGEB · EMBO · IEEE · ACS · RSC
 
@@ -60,130 +62,186 @@ exacto este sistema la capta. Cobertura: el universo observable.
   los países; el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
   castellano — el multilingüismo NO es barrera.
 
-4) PIPELINE DIARIO (implementado)
+4) PIPELINE DIARIO (implementado y probado por partes)
 FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
-  • Cron: 0 9 * * * (09:00 UTC = 06:00 Argentina). GitHub puede
-    atrasarlo ~15 min en horas pico.
-  • Botón manual: Actions → daily-ingest → Run workflow.
+  • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
+    daily-ingest → Run workflow. Duración típica: 15-20 min.
   • FETCH: cada fuente con try propio — una caída NO frena la
-    corrida. HTTP con reintentos y backoff exponencial.
+    corrida (validado en 5 corridas). HTTP con reintentos/backoff.
+    Números típicos: openalex 200 · arxiv 100 · rss 145 = 445.
   • NORMALIZE: esquema único + id estable (doi:... si hay DOI,
     si no sha256 del título normalizado).
   • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
-    Y dentro de la misma corrida (dos fuentes, misma noticia).
-  • CAPS: round-robin entre fuentes — ninguna acapara el lote.
-  • EVALUATE: agente en chunks de 60 ítems, pausa 2s entre chunks.
-    Si un chunk falla, esos ítems quedan fuera de ESTA corrida;
-    si NO hay veredictos, seen.json NO se guarda → el lote completo
-    se reintenta solo al día siguiente (nada se pierde).
-  • DIGEST: reports/AAAA-MM-DD.md, agrupado por rubro.
+    Y dentro de la misma corrida (dos fuentes, misma noticia —
+    validado: 3 duplicados inter-fuente cazados).
+  • CAPS: round-robin entre fuentes (442 → 220 en prueba real).
+    Ninguna fuente acapara el lote del agente.
+  • EVALUATE: chunks de 20 ítems, ritmo 40s (ver §6). Si un chunk
+    falla, esos ítems quedan fuera de ESTA corrida.
+  • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por score.
   • NTFY: solo si hay ítems sobre el umbral. Top 10 (~4KB).
-  • PERSIST: seen.json + reporte commiteados ("radar: corrida
-    AAAA-MM-DD") — solo si hubo cambios.
+  • PERSIST — regla anti-pérdida: SOLO se marca "visto" lo que el
+    agente evaluó de verdad. Lo dejado fuera por caps o por un chunk
+    fallido se borra de la memoria y SE REINTENTA MAÑANA. Si el
+    agente no devuelve NADA, seen.json no se guarda y el lote
+    completo reintenta. Nada se pierde en silencio.
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
-  caps.per_source: 50  ·  caps.total: 300  ·  threshold: 70/100
+  caps.per_source: 50 · caps.total: 300 · threshold: 70/100
   openalex: days_back 2 · per_page 100 · max_pages 2
-  arxiv: max_results 100
-  notify: top_n 10 · max_bytes 4096
+  arxiv: max_results 100 · notify: top_n 10 · max_bytes 4096
+  agent: groq_model "" / github_model "" (vacío = auto-descubre)
 El agente NO resume todo: SELECCIONA lo mejor del día. Más
 cobertura = subir caps/days_back. Menos ruido = subir threshold.
 Nunca más corridas.
 
-6) AGENTE EVALUADOR (implementado)
-  • Primario: GitHub Models — openai/gpt-4o-mini — autenticado con
-    el GITHUB_TOKEN del workflow (permiso models: read) → $0.
-  • Fallback: Groq llama-3.3-70b-versatile — SOLO si existe el
-    secret GROQ_API_KEY (opcional, hoy no creado).
-  • Salida SIEMPRE en español: score 0-100 + rubro + región +
-    resumen_es por ítem. JSON tolerante a fences ```; ítems sin
-    veredicto se descartan de la corrida.
-  • Rubros: investigacion | preprint | descubrimiento | patente |
-    salud | tech | financiamiento | otro
-  • Regiones: America Latina | Norteamerica | Europa | Asia |
-    Africa | Oceania | Global
-6) AGENTE EVALUADOR (v3.2 — auto-descubre modelos)
-  • Proveedores en orden: Groq (primario) → GitHub Models (fallback),
-    ambos $0. El código consulta el catálogo REAL de cada proveedor
-    en cada corrida y elige el mejor modelo disponible — las
-    rotaciones de catálogo no rompen nada. Overrides opcionales:
-    agent.groq_model / agent.github_model en sources.yaml.
-  • Diagnóstico LLM: toda respuesta no-JSON o sin 'choices' loguea
-    URL final + status + cuerpo (error auto-explicativo).
-  • Salida SIEMPRE en español: score 0-100 + rubro + región +
-    resumen_es. Rubros y regiones sin cambios.
+6) AGENTE EVALUADOR (v3.2 — auto-descubre modelos, TPM-aware)
+  PROVEEDORES (en orden, ambos $0):
+    1. Groq ........ GROQ_API_KEY — clave validada (catálogo 11
+                     modelos). PRIMARIO.
+    2. GitHub Models  GITHUB_TOKEN del workflow (models: read) —
+                     FALLBACK. Ojo: su /catalog no siempre responde
+                     desde runners → si falla, intenta a ciegas
+                     openai/gpt-4.1-mini y openai/gpt-4o-mini.
+  AUTO-DESCUBRIMIENTO: en CADA corrida se consulta el catálogo REAL
+  del proveedor (GET /models) y se elige por preferencia:
+    Groq: 120b → maverick → kimi-k2 → 70b → qwen3-32b → scout → 8b
+    GH:   gpt-4.1-mini → gpt-4o-mini → mini → gpt-oss
+  Razón: los catálogos rotan (llama-3.3-70b-versatile fue retirado
+  en vivo durante la puesta en marcha). Nunca hardcodear modelos.
+  Override manual opcional: agent.groq_model / agent.github_model.
+  RESPECTO AL RATE LIMIT (lección de la corrida 5):
+    • Free tier Groq: 8.000 tokens/minuto POR MODELO.
+    • CHUNK = 20 ítems/llamada (~2.5k tokens) — nunca más grande.
+    • Resumen en payload recortado a 200 chars, título a 150.
+    • Pausa 40s entre chunks (~3.7k tokens/min < 8k).
+    • Ante 429: espera 65s y reintenta ×3 (ventana de un minuto).
+    • Cascada: prueba hasta 3 modelos de Groq — si el TPM de uno
+      está agotado, el siguiente puede responder al instante.
+    • max_tokens salida: 3000. Prompt prohíbe markdown/```.
+  SALIDA: SIEMPRE español. Por ítem: score 0-100 + rubro + región +
+  resumen_es. JSON tolerante a fences; ítem sin veredicto = fuera
+  de esta corrida (reintenta mañana).
+  Rubros: investigacion | preprint | descubrimiento | patente |
+          salud | tech | financiamiento | otro
+  Regiones: America Latina | Norteamerica | Europa | Asia | Africa |
+            Oceania | Global
+  DIAGNÓSTICO: toda respuesta no-JSON o sin 'choices' loguea URL
+  final + HTTP status + fragmento del cuerpo. Errores auto-explicativos.
 
 7) SEGURIDAD (estado real)
   • Secrets en GitHub Secrets:
-      NTFY_TOPIC .... CREADO y probado (valor no documentado)
-      NTFY_TOKEN .... opcional (blindaje: topic reservado + token)
-      GROQ_API_KEY .. opcional (fallback del agente)
-  • GITHUB_TOKEN: permisos mínimos declarados en el workflow:
-      contents: write (commits de state/reports) + models: read.
-  • ntfy.sh público: cualquiera que conozca el nombre del topic
-    puede leer. Mitigación aplicada: topic largo + aleatorio.
-    Blindaje total opcional: topic reservado + NTFY_TOKEN.
-  • Polite pool: polite_email en sources.yaml identifica ante
-    OpenAlex/Crossref (mejores rate limits).
+      NTFY_TOPIC .... CREADO y PROBADO (push al teléfono OK;
+                      valor NO documentado — práctica correcta)
+      GROQ_API_KEY .. CREADO y VALIDADO (auth OK, catálogo 11 modelos)
+      NTFY_TOKEN .... opcional, no creado (blindaje: topic reservado)
+  • GITHUB_TOKEN: automático del workflow. Importante: NO se inyecta
+    solo — debe mapearse en el env del step (lección de la corrida 2).
+    Permisos declarados: contents: write + models: read.
+  • ntfy.sh público: quien sepa el topic lee. Mitigado: topic largo
+    + aleatorio + jamás documentado.
+  • Polite pool: polite_email real en sources.yaml (configurado).
   • No es asesoramiento financiero/médico: prioriza, vos decidís.
 
 8) ESTRUCTURA (real, en el repo)
 global-research-radar/
-├─ .github/workflows/daily-ingest.yml  ← cron + botón manual
+├─ .github/workflows/daily-ingest.yml  ← cron + botón manual +
+│                                         mapeo de secrets en env
 ├─ config/sources.yaml                 ← TODO el radar se controla acá
 ├─ src/
 │  ├─ config.py          carga del YAML
 │  ├─ smoke.py           prueba de fetchers sin agente (opcional)
-│  ├─ fetchers/          common.py, openalex.py, arxiv.py,
-│  │                     rss_generic.py
+│  ├─ fetchers/          common.py (GET/POST + diagnóstico),
+│  │                     openalex.py, arxiv.py, rss_generic.py
 │  ├─ pipeline/          normalize.py, dedup.py, caps.py
-│  ├─ agent/             evaluator.py
+│  ├─ agent/             evaluator.py (v3.2 TPM-aware)
 │  └─ notify/            ntfy.py
-├─ run.py                orquestador completo (punto de entrada)
-├─ state/seen.json       memoria permanente (se commitea)
-├─ reports/              AAAA-MM-DD.md por corrida
+├─ run.py                orquestador completo + persist selectivo
+├─ state/seen.json       memoria permanente (se commitea; hoy {}
+├─ reports/                 porque aún no hubo corrida completa)
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.1)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.2)
 
-9) OPERACIÓN (chuleta)
+9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
-  • Leer el paso "Correr radar" en este orden:
-      fetch total: N ítems → dedup: X nuevos / Y ya vistos →
-      caps: A → B ítems → agente: chunk i/j → reporte escrito →
-      ntfy: enviado
+  • Orden de lectura del paso "Correr radar":
+      fetch total: N → dedup: X nuevos / Y vistos → caps: A → B →
+      groq: catálogo OK → agente servido por Groq (modelo) →
+      agente: chunk i/j → reporte escrito → ntfy: enviado → push 📱
+  • La corrida tarda 15-20 min: es el free tier mandando el ritmo.
+    Algunos "429 — espero 65s" intercalados son normales y previstos.
   • Agregar fuente RSS: 1 línea en sources.yaml (name, url, lang).
-    Feed caído = warning en el log, la corrida sigue.
-  • Ajustar: threshold ↑ (menos ruido) · caps.total ↑ (más
-    cobertura) · openalex.days_back ↑ (más ventana).
-  • Síntomas comunes:
-      openalex: 0 ítems ....... revisar polite_email (placeholder?)
-      rss: falló (404) ........ URL muerta → reemplazar en yaml
-      agente sin veredictos ... seen no se guarda, reintenta solo
-      ntfy: falló, resto OK ... revisar secret NTFY_TOPIC
+  • Ajustar: threshold ↑ menos ruido · caps.total ↑ más cobertura ·
+    openalex.days_back ↑ más ventana.
+  • Síntomas y significado exacto:
+      openalex: 0 ítems ....... revisar polite_email
+      rss: falló (404) ........ URL muerta → cambiar en yaml
+      KeyError 'GITHUB_TOKEN' . falta mapearlo en env del workflow
+      404 model_not_found ..... el código ya se defiende (catálogo
+                                real); si se viera, cambiar PREF_GROQ
+      413 Payload Too Large ... chunks demasiado grandes — verificar
+                                CHUNK=20 en evaluator.py
+      sin JSON parseable ...... respuesta truncada — bajar CHUNK o
+                                SUMMARY_CHARS
+      github models: catálogo no disponible — normal, cae a ciegas
       sin push, corrida verde . normal: nada superó el umbral
 
-10) PLAN DE FASES (regla: la siguiente solo cuando la anterior
+10) BITÁCORA DE PUESTA EN MARCHA (por qué el código es como es)
+  Corrida 1: OpenAlex 401 en pág. 2 (paginación por cursor rota en
+             runners) + evaluator.py incompleto al pegarse en el repo.
+    Fix: paginación por page numérica, tolerante por página (si una
+    página falla, se devuelven las anteriores); evaluator completo;
+    common.py separa GET/POST y loguea body de errores; run.py crea
+    reports/ y persiste solo lo evaluado.
+  Corrida 2: KeyError 'GITHUB_TOKEN' — los secrets de GitHub no se
+             inyectan como variables de entorno solos.
+    Fix: mapear GITHUB_TOKEN en el env del step del workflow.
+  Corrida 3: GitHub Models devolvía no-JSON sin detalle visible.
+    Fix: diagnóstico status+cuerpo en errores; se crea GROQ_API_KEY.
+  Corrida 4: GitHub Models: HTTP 200 con cuerpo 'OK' (no chat). Groq:
+             auth OK pero modelo retirado del catálogo (404
+             model_not_found) — los nombres hardcodeados son frágiles.
+    Fix: auto-descubrimiento del catálogo real en cada corrida;
+         Groq primario; overrides opcionales en sources.yaml.
+  Corrida 5: el auto-descubrimiento FUNCIONÓ (eligió gpt-oss-120b
+             solo), pero el free tier dijo basta: chunk de 60 ítems
+             pedía 9.320 tokens vs límite de 8.000/min (413 + 429),
+             y /catalog de GH no responde desde runners.
+    Fix v3.2: CHUNK 20, pausa 40s, espera 65s ante 429, cascada de
+    3 modelos Groq, GH a ciegas con 2 candidatos, max_tokens 3000,
+    prompt sin markdown. → PENDIENTE DE PROBAR (próxima corrida).
+  REGLAS DEL PROYECTO (aprendidas en vivo):
+    R1. Archivos Python se pegan COMPLETOS, de una sola vez.
+    R2. Nunca hardcodear nombres de modelos: consultar catálogo real.
+    R3. El free tier manda el ritmo: dosis pequeña + pausa larga.
+    R4. Todo error HTTP loguea status + cuerpo — nunca fallar a ciegas.
+    R5. Solo persiste lo evaluado; lo excluido reintenta mañana.
+    R6. Una fuente caída NUNCA frena la corrida.
+
+11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
-  FASE 1 (núcleo) .... ✅ IMPLEMENTADA — en validación de la
-                       primera corrida
+  FASE 1 (núcleo) .... 🔶 CÓDIGO COMPLETO — falta corrida verde final
   FASE 2 (biosalud) .. ⏳ WHO ICTRP + ClinicalTrials + openFDA
   FASE 3 (inventos) .. ⏳ PATENTSCOPE + PatentsView + Lens
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-11) CHECKLIST v3.1
+12) CHECKLIST v3.2
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.1)
-[x] Secret NTFY_TOPIC creado y probado (push OK al teléfono)
+[x] Manual actualizado (este archivo, v3.2)
+[x] Secret NTFY_TOPIC creado y probado (push OK)
 [x] Workflow permissions: read and write
-[x] Código fase 1 completo: fetchers + pipeline + agente + ntfy +
-    run.py + workflow con botón manual
-[ ] Verificar polite_email real en sources.yaml (no placeholder)
-[ ] Primera corrida manual verde + push en el teléfono
-[ ] Ajuste fino threshold/caps con datos reales de ruido
-[ ] Fase 2: WHO ICTRP + ClinicalTrials.gov + openFDA
+[x] polite_email real en sources.yaml
+[x] Código fase 1 completo (15 archivos)
+[x] Secret GROQ_API_KEY creado y validado
+[x] GITHUB_TOKEN mapeado en env del workflow
+[x] Agente v3.2: auto-descubrimiento + TPM-aware (commiteado)
+[ ] CORRIDA VERDE FINAL: 220 ítems evaluados → reporte en reports/
+    → commit de seen.json → push al teléfono ← SIGUIENTE PASO
+[ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
+[ ] Cierre fase 1 → arrancar fase 2 (WHO ICTRP + ClinicalTrials +
+    openFDA)
 [ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
-[ ] (opcional) Fallback Groq: secret GROQ_API_KEY
 
 NOMBRE DEL REPO: global-research-radar
 =====================================================================
