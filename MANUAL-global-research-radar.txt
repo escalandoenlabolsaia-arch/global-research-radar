@@ -280,11 +280,12 @@ global-research-radar/
 [x] Regla anti-pérdida probada en vivo (422 ítems a reintento)
 [x] Agente v3.3: reasoning_effort=low + salvamento JSON (commiteado)
 [x] ntfy.py: Title RFC 2047, emojis seguros (commiteado)
-[ ] CORRIDA VERDE FINAL: 11/11 chunks → reporte completo → commit de
-    seen.json → push al teléfono ← SIGUIENTE PASO
+[x] CORRIDA VERDE FINAL: 11/11 chunks · 205/209 evaluados (98%) ·
+    reporte + commit + push al teléfono (2026-10-15)
+[ ] Primera semana en automático: observar 3-4 corridas del cron
+    (memoria, duplicados, horario) antes de expansión mayor
 [ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
-[ ] Cierre fase 1 → arrancar fase 2 (WHO ICTRP + ClinicalTrials +
-    openFDA)
+[ ] Fase 2 (biosalud): WHO ICTRP + ClinicalTrials + openFDA
 [ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
 
 NOMBRE DEL REPO: global-research-radar
