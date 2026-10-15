@@ -80,7 +80,8 @@ FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERS
     falla, esos ítems quedan fuera de ESTA corrida.
   • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por score.
   • NTFY: solo si hay ítems sobre el umbral. Top 10 (~4KB).
-    Title con emojis viaja RFC 2047 (ver §7).
+    Cada ítem: [score] título + resumen_es + URL. Title con
+    emojis viaja RFC 2047 (ver §7).
   • PERSIST — regla anti-pérdida: SOLO se marca "visto" lo que el
     agente evaluó de verdad. Lo dejado fuera por caps o por un chunk
     fallido se borra de la memoria y SE REINTENTA MAÑANA. Si el
