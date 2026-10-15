@@ -88,8 +88,10 @@ def main() -> int:
     top_n = int(cfg.get("notify", {}).get("top_n", 10))
     if encima:
         top = encima[:top_n]
-        body = "\n\n".join(f"[{e['score']}] {e['title']}\n{e.get('resumen_es', '')}\n{e['url']}"
-            for e in top)
+        body = "\n\n".join(
+            f"[{e['score']}] {e['title']}\n{e.get('resumen_es', '')[:140]}\n{e['url']}"
+            for e in top
+        )
         ntfy.send(f"🔬 Radar global — {len(encima)} hallazgos hoy", body, cfg)
     else:
         log.info("nada sobre umbral — no se envía push")
