@@ -1,5 +1,5 @@
 =====================================================================
-  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.2 · FASE 1 — VALIDACIÓN FINAL)
+  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.3 · FASE 1 — VALIDACIÓN FINAL)
   Monitoreo global de todo lo público que se investiga, descubre,
   patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -67,24 +67,26 @@ FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERS
   • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
     daily-ingest → Run workflow. Duración típica: 15-20 min.
   • FETCH: cada fuente con try propio — una caída NO frena la
-    corrida (validado en 5 corridas). HTTP con reintentos/backoff.
+    corrida (validado en 6 corridas). HTTP con reintentos/backoff.
     Números típicos: openalex 200 · arxiv 100 · rss 145 = 445.
   • NORMALIZE: esquema único + id estable (doi:... si hay DOI,
     si no sha256 del título normalizado).
   • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
     Y dentro de la misma corrida (dos fuentes, misma noticia —
-    validado: 3 duplicados inter-fuente cazados).
+    validado: duplicados inter-fuente cazados en vivo).
   • CAPS: round-robin entre fuentes (442 → 220 en prueba real).
     Ninguna fuente acapara el lote del agente.
-  • EVALUATE: chunks de 20 ítems, ritmo 40s (ver §6). Si un chunk
+  • EVALUATE: chunks de 20 ítems, ritmo 50s (ver §6). Si un chunk
     falla, esos ítems quedan fuera de ESTA corrida.
   • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por score.
   • NTFY: solo si hay ítems sobre el umbral. Top 10 (~4KB).
+    Title con emojis viaja RFC 2047 (ver §7).
   • PERSIST — regla anti-pérdida: SOLO se marca "visto" lo que el
     agente evaluó de verdad. Lo dejado fuera por caps o por un chunk
     fallido se borra de la memoria y SE REINTENTA MAÑANA. Si el
     agente no devuelve NADA, seen.json no se guarda y el lote
-    completo reintenta. Nada se pierde en silencio.
+    completo reintenta. Nada se pierde en silencio. (Validado en
+    vivo: 422 ítems sin veredicto volvieron al radar.)
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
   caps.per_source: 50 · caps.total: 300 · threshold: 70/100
@@ -95,7 +97,7 @@ El agente NO resume todo: SELECCIONA lo mejor del día. Más
 cobertura = subir caps/days_back. Menos ruido = subir threshold.
 Nunca más corridas.
 
-6) AGENTE EVALUADOR (v3.2 — auto-descubre modelos, TPM-aware)
+6) AGENTE EVALUADOR (v3.3 — anti-rotación, TPM-aware, reasoning-safe)
   PROVEEDORES (en orden, ambos $0):
     1. Groq ........ GROQ_API_KEY — clave validada (catálogo 11
                      modelos). PRIMARIO.
@@ -104,26 +106,36 @@ Nunca más corridas.
                      desde runners → si falla, intenta a ciegas
                      openai/gpt-4.1-mini y openai/gpt-4o-mini.
   AUTO-DESCUBRIMIENTO: en CADA corrida se consulta el catálogo REAL
-  del proveedor (GET /models) y se elige por preferencia:
+  del proveedor (GET /models) UNA sola vez (cache interno) y se
+  elige por preferencia:
     Groq: 120b → maverick → kimi-k2 → 70b → qwen3-32b → scout → 8b
     GH:   gpt-4.1-mini → gpt-4o-mini → mini → gpt-oss
   Razón: los catálogos rotan (llama-3.3-70b-versatile fue retirado
   en vivo durante la puesta en marcha). Nunca hardcodear modelos.
   Override manual opcional: agent.groq_model / agent.github_model.
-  RESPECTO AL RATE LIMIT (lección de la corrida 5):
+  RESPECTO AL RATE LIMIT (lecciones de las corridas 5 y 6):
     • Free tier Groq: 8.000 tokens/minuto POR MODELO.
     • CHUNK = 20 ítems/llamada (~2.5k tokens) — nunca más grande.
     • Resumen en payload recortado a 200 chars, título a 150.
-    • Pausa 40s entre chunks (~3.7k tokens/min < 8k).
+    • Pausa 50s entre chunks (bajo el techo del TPM).
     • Ante 429: espera 65s y reintenta ×3 (ventana de un minuto).
     • Cascada: prueba hasta 3 modelos de Groq — si el TPM de uno
       está agotado, el siguiente puede responder al instante.
-    • max_tokens salida: 3000. Prompt prohíbe markdown/```.
+    • max_tokens salida: 4000.
+  RESPECTO A LOS MODELOS DE RAZONAMIENTO (lección corrida 6):
+    • gpt-oss es un modelo reasoning: quema tokens de SALIDA
+      pensando antes del JSON → con max_tokens bajo el array salía
+      truncado (causa de 10/11 chunks perdidos).
+    • Fix: payload con reasoning_effort=low para todo modelo
+      gpt-oss + max_tokens 4000 + resumen_es limitado a 25 palabras.
+  RESPECTO AL JSON (defensa en profundidad):
+    • Prompt prohíbe markdown y ``` (bloques de código).
+    • Parseo tolerante a fences igualmente.
+    • Si el array vino truncado: regex de rescate extrae los
+      objetos completos — se pierde 0-1 ítem, no 20.
   SALIDA: SIEMPRE español. Por ítem: score 0-100 + rubro + región +
-  resumen_es. JSON tolerante a fences; ítem sin veredicto = fuera
-  de esta corrida (reintenta mañana).
-  Rubros: investigacion | preprint | descubrimiento | patente |
-          salud | tech | financiamiento | otro
+  resumen_es. Rubros: investigacion | preprint | descubrimiento |
+  patente | salud | tech | financiamiento | otro
   Regiones: America Latina | Norteamerica | Europa | Asia | Africa |
             Oceania | Global
   DIAGNÓSTICO: toda respuesta no-JSON o sin 'choices' loguea URL
@@ -140,6 +152,10 @@ Nunca más corridas.
     Permisos declarados: contents: write + models: read.
   • ntfy.sh público: quien sepa el topic lee. Mitigado: topic largo
     + aleatorio + jamás documentado.
+  • NTFY TÉCNICO: los headers HTTP solo admiten latin-1 — un emoji
+    en el Title rompe el envío. El Title viaja como RFC 2047
+    (=?utf-8?b?...?=, ntfy lo decodifica) y los emojis viven en el
+    cuerpo, que va UTF-8. (Lección corrida 6.)
   • Polite pool: polite_email real en sources.yaml (configurado).
   • No es asesoramiento financiero/médico: prioriza, vos decidís.
 
@@ -154,19 +170,19 @@ global-research-radar/
 │  ├─ fetchers/          common.py (GET/POST + diagnóstico),
 │  │                     openalex.py, arxiv.py, rss_generic.py
 │  ├─ pipeline/          normalize.py, dedup.py, caps.py
-│  ├─ agent/             evaluator.py (v3.2 TPM-aware)
-│  └─ notify/            ntfy.py
+│  ├─ agent/             evaluator.py (v3.3 TPM + reasoning aware)
+│  └─ notify/            ntfy.py (Title RFC 2047)
 ├─ run.py                orquestador completo + persist selectivo
-├─ state/seen.json       memoria permanente (se commitea; hoy {}
-├─ reports/                 porque aún no hubo corrida completa)
+├─ state/seen.json       memoria permanente (se commitea; con ítems
+├─ reports/                 en cola de reintento hasta corrida verde)
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.2)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.3)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
   • Orden de lectura del paso "Correr radar":
       fetch total: N → dedup: X nuevos / Y vistos → caps: A → B →
-      groq: catálogo OK → agente servido por Groq (modelo) →
+      groq: catálogo OK (1 vez) → agente servido por Groq (modelo) →
       agente: chunk i/j → reporte escrito → ntfy: enviado → push 📱
   • La corrida tarda 15-20 min: es el free tier mandando el ritmo.
     Algunos "429 — espero 65s" intercalados son normales y previstos.
@@ -181,8 +197,12 @@ global-research-radar/
                                 real); si se viera, cambiar PREF_GROQ
       413 Payload Too Large ... chunks demasiado grandes — verificar
                                 CHUNK=20 en evaluator.py
-      sin JSON parseable ...... respuesta truncada — bajar CHUNK o
-                                SUMMARY_CHARS
+      "JSON truncado — salvé N/M objetos" .. defensa funcionando;
+                                si N queda chico, bajar SUMMARY_CHARS
+      sin JSON parseable ...... persiste tras el fix → revisar que
+                                gpt-oss lleve reasoning_effort=low
+      latin-1 codec error ..... emojis en headers → Title ya viaja
+                                RFC 2047; si se viera, ntfy.py viejo
       github models: catálogo no disponible — normal, cae a ciegas
       sin push, corrida verde . normal: nada superó el umbral
 
@@ -205,11 +225,20 @@ global-research-radar/
          Groq primario; overrides opcionales en sources.yaml.
   Corrida 5: el auto-descubrimiento FUNCIONÓ (eligió gpt-oss-120b
              solo), pero el free tier dijo basta: chunk de 60 ítems
-             pedía 9.320 tokens vs límite de 8.000/min (413 + 429),
-             y /catalog de GH no responde desde runners.
-    Fix v3.2: CHUNK 20, pausa 40s, espera 65s ante 429, cascada de
-    3 modelos Groq, GH a ciegas con 2 candidatos, max_tokens 3000,
-    prompt sin markdown. → PENDIENTE DE PROBAR (próxima corrida).
+             pedía 9.320 tokens vs límite de 8.000/min (413 + 429).
+    Fix v3.2: CHUNK 20, pausa larga, espera 65s ante 429, cascada de
+    3 modelos Groq, GH a ciegas con 2 candidatos.
+  Corrida 6: PRIMERA EVALUACIÓN REAL (chunk 3/11 → 20/20 veredictos,
+             primer reporte escrito). Pero 10/11 chunks fallaron:
+             gpt-oss-120b es un modelo de RAZONAMIENTO — quema tokens
+             de salida pensando y el JSON salía truncado a mitad del
+             array. Además ntfy rechazó el push: el 🔬 del Title no
+             cabe en latin-1 (headers HTTP). La regla anti-pérdida
+             devolvió los 422 ítems sin veredicto al radar ✓.
+    Fix v3.3: reasoning_effort=low para gpt-oss, max_tokens 4000,
+    resumen_es ≤25 palabras, salvamento de JSON truncado por regex
+    (pierde 0-1, no 20), catálogo consultado 1 vez por corrida,
+    Title ntfy como RFC 2047.
   REGLAS DEL PROYECTO (aprendidas en vivo):
     R1. Archivos Python se pegan COMPLETOS, de una sola vez.
     R2. Nunca hardcodear nombres de modelos: consultar catálogo real.
@@ -217,6 +246,10 @@ global-research-radar/
     R4. Todo error HTTP loguea status + cuerpo — nunca fallar a ciegas.
     R5. Solo persiste lo evaluado; lo excluido reintenta mañana.
     R6. Una fuente caída NUNCA frena la corrida.
+    R7. Los reasoning models (gpt-oss) queman tokens de salida
+        pensando: reasoning_effort=low o el JSON se trunca.
+    R8. Los headers HTTP solo admiten latin-1: emojis fuera de los
+        headers (Title viaja RFC 2047; emoji solo en el cuerpo).
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
@@ -226,18 +259,22 @@ global-research-radar/
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST v3.2
+12) CHECKLIST v3.3
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.2)
+[x] Manual actualizado (este archivo, v3.3)
 [x] Secret NTFY_TOPIC creado y probado (push OK)
 [x] Workflow permissions: read and write
 [x] polite_email real en sources.yaml
 [x] Código fase 1 completo (15 archivos)
 [x] Secret GROQ_API_KEY creado y validado
 [x] GITHUB_TOKEN mapeado en env del workflow
-[x] Agente v3.2: auto-descubrimiento + TPM-aware (commiteado)
-[ ] CORRIDA VERDE FINAL: 220 ítems evaluados → reporte en reports/
-    → commit de seen.json → push al teléfono ← SIGUIENTE PASO
+[x] Agente v3.2 TPM-aware: probado en vivo (catálogo + cascada OK)
+[x] Primera evaluación real: 20 ítems evaluados + 1er reporte
+[x] Regla anti-pérdida probada en vivo (422 ítems a reintento)
+[x] Agente v3.3: reasoning_effort=low + salvamento JSON (commiteado)
+[x] ntfy.py: Title RFC 2047, emojis seguros (commiteado)
+[ ] CORRIDA VERDE FINAL: 11/11 chunks → reporte completo → commit de
+    seen.json → push al teléfono ← SIGUIENTE PASO
 [ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
 [ ] Cierre fase 1 → arrancar fase 2 (WHO ICTRP + ClinicalTrials +
     openFDA)
