@@ -1,5 +1,6 @@
 """Pipeline completo: FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST
 → NTFY → PERSIST. Punto de entrada del workflow y de pruebas manuales.
+v3.4: push compacto (top 5, resumen 140 chars) + header Click al informe.
 """
 import logging
 import os
