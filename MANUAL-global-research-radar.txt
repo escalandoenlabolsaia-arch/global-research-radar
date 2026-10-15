@@ -1,5 +1,5 @@
 =====================================================================
-  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.3 · FASE 1 — VALIDACIÓN FINAL)
+  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.4 · FASE 1 OPERATIVA)
   Monitoreo global de todo lo público que se investiga, descubre,
   patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -62,37 +62,41 @@ exacto este sistema la capta. Cobertura: el universo observable.
   los países; el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
   castellano — el multilingüismo NO es barrera.
 
-4) PIPELINE DIARIO (implementado y probado por partes)
+4) PIPELINE DIARIO (implementado y validado en 8 corridas reales)
 FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
   • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
     daily-ingest → Run workflow. Duración típica: 15-20 min.
   • FETCH: cada fuente con try propio — una caída NO frena la
-    corrida (validado en 6 corridas). HTTP con reintentos/backoff.
-    Números típicos: openalex 200 · arxiv 100 · rss 145 = 445.
+    corrida. HTTP con reintentos/backoff. Números típicos:
+    openalex 200 · arxiv 100 · rss 145 = 445.
   • NORMALIZE: esquema único + id estable (doi:... si hay DOI,
     si no sha256 del título normalizado).
   • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
-    Y dentro de la misma corrida (dos fuentes, misma noticia —
-    validado: duplicados inter-fuente cazados en vivo).
+    Y dentro de la misma corrida (dos fuentes, misma noticia).
+    Validado en vivo: duplicados inter-fuente e inter-corrida
+    cazados (20 exactos + 3 variantes de título en una corrida).
   • CAPS: round-robin entre fuentes (442 → 220 en prueba real).
     Ninguna fuente acapara el lote del agente.
   • EVALUATE: chunks de 20 ítems, ritmo 50s (ver §6). Si un chunk
     falla, esos ítems quedan fuera de ESTA corrida.
-  • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por score.
-  • NTFY: solo si hay ítems sobre el umbral. Top 10 (~4KB).
-    Cada ítem: [score] título + resumen_es + URL. Title con
-    emojis viaja RFC 2047 (ver §7).
+  • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por
+    score. El reporte diario es la fuente COMPLETA de verdad.
+  • NTFY (push diario): top 5 destacados, formato por ítem:
+    [score] título original + resumen_es (recortado a 140 chars)
+    + URL. Compacto a propósito: entra entero en la notificación
+    del teléfono (~1.4KB). El detalle íntegro vive en reports/.
+    Title con emojis viaja RFC 2047 (ver §7).
   • PERSIST — regla anti-pérdida: SOLO se marca "visto" lo que el
     agente evaluó de verdad. Lo dejado fuera por caps o por un chunk
     fallido se borra de la memoria y SE REINTENTA MAÑANA. Si el
     agente no devuelve NADA, seen.json no se guarda y el lote
     completo reintenta. Nada se pierde en silencio. (Validado en
-    vivo: 422 ítems sin veredicto volvieron al radar.)
+    vivo 3 corridas: 422 y 217 ítems devueltos al radar.)
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
   caps.per_source: 50 · caps.total: 300 · threshold: 70/100
   openalex: days_back 2 · per_page 100 · max_pages 2
-  arxiv: max_results 100 · notify: top_n 10 · max_bytes 4096
+  arxiv: max_results 100 · notify: top_n 5 · max_bytes 4096
   agent: groq_model "" / github_model "" (vacío = auto-descubre)
 El agente NO resume todo: SELECCIONA lo mejor del día. Más
 cobertura = subir caps/days_back. Menos ruido = subir threshold.
@@ -101,7 +105,8 @@ Nunca más corridas.
 6) AGENTE EVALUADOR (v3.3 — anti-rotación, TPM-aware, reasoning-safe)
   PROVEEDORES (en orden, ambos $0):
     1. Groq ........ GROQ_API_KEY — clave validada (catálogo 11
-                     modelos). PRIMARIO.
+                     modelos). PRIMARIO. Sirvió las últimas 3
+                     corridas completas con openai/gpt-oss-120b.
     2. GitHub Models  GITHUB_TOKEN del workflow (models: read) —
                      FALLBACK. Ojo: su /catalog no siempre responde
                      desde runners → si falla, intenta a ciegas
@@ -114,11 +119,11 @@ Nunca más corridas.
   Razón: los catálogos rotan (llama-3.3-70b-versatile fue retirado
   en vivo durante la puesta en marcha). Nunca hardcodear modelos.
   Override manual opcional: agent.groq_model / agent.github_model.
-  RESPECTO AL RATE LIMIT (lecciones de las corridas 5 y 6):
+  RESPECTO AL RATE LIMIT (lecciones de las corridas 5-7):
     • Free tier Groq: 8.000 tokens/minuto POR MODELO.
     • CHUNK = 20 ítems/llamada (~2.5k tokens) — nunca más grande.
     • Resumen en payload recortado a 200 chars, título a 150.
-    • Pausa 50s entre chunks (bajo el techo del TPM).
+    • Pausa 50s entre chunks: validada — corrida 7 con CERO 429.
     • Ante 429: espera 65s y reintenta ×3 (ventana de un minuto).
     • Cascada: prueba hasta 3 modelos de Groq — si el TPM de uno
       está agotado, el siguiente puede responder al instante.
@@ -126,14 +131,16 @@ Nunca más corridas.
   RESPECTO A LOS MODELOS DE RAZONAMIENTO (lección corrida 6):
     • gpt-oss es un modelo reasoning: quema tokens de SALIDA
       pensando antes del JSON → con max_tokens bajo el array salía
-      truncado (causa de 10/11 chunks perdidos).
+      truncado (causa de 10/11 chunks perdidos en la corrida 6).
     • Fix: payload con reasoning_effort=low para todo modelo
       gpt-oss + max_tokens 4000 + resumen_es limitado a 25 palabras.
+    • Validado: de 10/11 chunks perdidos a 1 parcial en corrida 7.
   RESPECTO AL JSON (defensa en profundidad):
     • Prompt prohíbe markdown y ``` (bloques de código).
     • Parseo tolerante a fences igualmente.
     • Si el array vino truncado: regex de rescate extrae los
-      objetos completos — se pierde 0-1 ítem, no 20.
+      objetos completos — se pierde 0-1 ítem, no 20. (Validado en
+      vivo: "salvé 16/16 objetos completos".)
   SALIDA: SIEMPRE español. Por ítem: score 0-100 + rubro + región +
   resumen_es. Rubros: investigacion | preprint | descubrimiento |
   patente | salud | tech | financiamiento | otro
@@ -156,7 +163,7 @@ Nunca más corridas.
   • NTFY TÉCNICO: los headers HTTP solo admiten latin-1 — un emoji
     en el Title rompe el envío. El Title viaja como RFC 2047
     (=?utf-8?b?...?=, ntfy lo decodifica) y los emojis viven en el
-    cuerpo, que va UTF-8. (Lección corrida 6.)
+    cuerpo, que va UTF-8. (Lección corrida 6, validado corrida 7.)
   • Polite pool: polite_email real en sources.yaml (configurado).
   • No es asesoramiento financiero/médico: prioriza, vos decidís.
 
@@ -173,11 +180,12 @@ global-research-radar/
 │  ├─ pipeline/          normalize.py, dedup.py, caps.py
 │  ├─ agent/             evaluator.py (v3.3 TPM + reasoning aware)
 │  └─ notify/            ntfy.py (Title RFC 2047)
-├─ run.py                orquestador completo + persist selectivo
-├─ state/seen.json       memoria permanente (se commitea; con ítems
-├─ reports/                 en cola de reintento hasta corrida verde)
+├─ run.py                orquestador completo + persist selectivo +
+│                          push compacto (top 5, resumen 140 chars)
+├─ state/seen.json       memoria permanente (se commitea cada corrida)
+├─ reports/              AAAA-MM-DD.md por corrida — fuente completa
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.3)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.4)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -186,7 +194,9 @@ global-research-radar/
       groq: catálogo OK (1 vez) → agente servido por Groq (modelo) →
       agente: chunk i/j → reporte escrito → ntfy: enviado → push 📱
   • La corrida tarda 15-20 min: es el free tier mandando el ritmo.
-    Algunos "429 — espero 65s" intercalados son normales y previstos.
+  • El push muestra los 5 mejores del día; el informe completo está
+    en reports/AAAA-MM-DD.md (todos los ítems sobre umbral, con
+    rubro, región y resumen íntegro).
   • Agregar fuente RSS: 1 línea en sources.yaml (name, url, lang).
   • Ajustar: threshold ↑ menos ruido · caps.total ↑ más cobertura ·
     openalex.days_back ↑ más ventana.
@@ -204,21 +214,20 @@ global-research-radar/
                                 gpt-oss lleve reasoning_effort=low
       latin-1 codec error ..... emojis en headers → Title ya viaja
                                 RFC 2047; si se viera, ntfy.py viejo
+      push cortado a mitad de ítem . el texto excede lo que la
+                                notificación muestra; el mensaje
+                                íntegro queda en la app y en
+                                reports/. Fix aplicado: top_n 5 +
+                                resumen recortado a 140 chars.
       github models: catálogo no disponible — normal, cae a ciegas
       sin push, corrida verde . normal: nada superó el umbral
-      push cortado a mitad de ítem ... texto excede lo que la
-                                notificación muestra → el mensaje
-                                completo queda en la app y en
-                                reports/; mitigación: top_n 5 +
-                                resumen recortado a 140 chars
 
 10) BITÁCORA DE PUESTA EN MARCHA (por qué el código es como es)
   Corrida 1: OpenAlex 401 en pág. 2 (paginación por cursor rota en
              runners) + evaluator.py incompleto al pegarse en el repo.
-    Fix: paginación por page numérica, tolerante por página (si una
-    página falla, se devuelven las anteriores); evaluator completo;
-    common.py separa GET/POST y loguea body de errores; run.py crea
-    reports/ y persiste solo lo evaluado.
+    Fix: paginación por page numérica, tolerante por página; evaluator
+    completo; common.py separa GET/POST y loguea body de errores;
+    run.py crea reports/ y persiste solo lo evaluado.
   Corrida 2: KeyError 'GITHUB_TOKEN' — los secrets de GitHub no se
              inyectan como variables de entorno solos.
     Fix: mapear GITHUB_TOKEN en el env del step del workflow.
@@ -237,20 +246,30 @@ global-research-radar/
   Corrida 6: PRIMERA EVALUACIÓN REAL (chunk 3/11 → 20/20 veredictos,
              primer reporte escrito). Pero 10/11 chunks fallaron:
              gpt-oss-120b es un modelo de RAZONAMIENTO — quema tokens
-             de salida pensando y el JSON salía truncado a mitad del
-             array. Además ntfy rechazó el push: el 🔬 del Title no
-             cabe en latin-1 (headers HTTP). La regla anti-pérdida
-             devolvió los 422 ítems sin veredicto al radar ✓.
+             de salida pensando y el JSON salía truncado. Además ntfy
+             rechazó el push: el 🔬 del Title no cabe en latin-1.
+             La regla anti-pérdida devolvió los 422 ítems al radar ✓.
     Fix v3.3: reasoning_effort=low para gpt-oss, max_tokens 4000,
-    resumen_es ≤25 palabras, salvamento de JSON truncado por regex
-    (pierde 0-1, no 20), catálogo consultado 1 vez por corrida,
-    Title ntfy como RFC 2047.
+    salvamento de JSON truncado por regex, catálogo 1 vez por
+    corrida, Title ntfy como RFC 2047.
   Corrida 7: VERDE COMPLETA (2026-10-15). Cero 429 (pausa 50s clavó
              el TPM). 11/11 chunks, 205/209 evaluados (98%). Chunk 10
              truncado → salvamento rescató 16/16 (solo 4 a reintento).
-             ntfy: enviado (1333 bytes), push con 🔬 vía RFC 2047 ✓.
-             Dedup fuzzy inter-corrida: 23 cazados (20 exactos + 3
-             variantes). FASE 1 CERRADA.
+             ntfy: enviado (1333 bytes), push recibido en el teléfono
+             con los 10 destacados. Commit de memoria e informes OK.
+             Dedup fuzzy inter-corrida: 23 cazados. FASE 1 CERRADA.
+  Corrida 8: push con detalle en español (resumen_es agregado al
+             body): formato validado — título original en inglés
+             (identificador exacto para búsqueda/cita) + resumen
+             castellano + URL. Pero la NOTIFICACIÓN se cortó a mitad
+             de un ítem: el cuerpo (~2.5KB con resúmenes) excede lo
+             que la burbuja de Android muestra. Mensaje íntegro
+             quedaba en la app y en reports/.
+    Fix v3.4: push compacto — top_n 10→5 + resumen_es recortado a
+    140 chars en el push (íntegro en reports/). ~1.4KB por push:
+    el formato de la corrida 7, ya probado que llega entero.
+  Corrida 9: VERIFICACIÓN del push compacto — EN CURSO al cierre de
+             esta edición del manual.
   REGLAS DEL PROYECTO (aprendidas en vivo):
     R1. Archivos Python se pegan COMPLETOS, de una sola vez.
     R2. Nunca hardcodear nombres de modelos: consultar catálogo real.
@@ -262,6 +281,9 @@ global-research-radar/
         pensando: reasoning_effort=low o el JSON se trunca.
     R8. Los headers HTTP solo admiten latin-1: emojis fuera de los
         headers (Title viaja RFC 2047; emoji solo en el cuerpo).
+    R9. El push es un teaser, no el informe: compacto por diseño
+        (top 5, resumen 140 chars). El detalle íntegro vive en
+        reports/ — nunca competir con el límite de la notificación.
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
@@ -272,9 +294,9 @@ global-research-radar/
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST v3.3
+12) CHECKLIST v3.4
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.3)
+[x] Manual actualizado (este archivo, v3.4)
 [x] Secret NTFY_TOPIC creado y probado (push OK)
 [x] Workflow permissions: read and write
 [x] polite_email real en sources.yaml
@@ -282,12 +304,16 @@ global-research-radar/
 [x] Secret GROQ_API_KEY creado y validado
 [x] GITHUB_TOKEN mapeado en env del workflow
 [x] Agente v3.2 TPM-aware: probado en vivo (catálogo + cascada OK)
-[x] Primera evaluación real: 20 ítems evaluados + 1er reporte
-[x] Regla anti-pérdida probada en vivo (422 ítems a reintento)
-[x] Agente v3.3: reasoning_effort=low + salvamento JSON (commiteado)
-[x] ntfy.py: Title RFC 2047, emojis seguros (commiteado)
-[x] CORRIDA VERDE FINAL: 11/11 chunks · 205/209 evaluados (98%) ·
-    reporte + commit + push al teléfono (2026-10-15)
+[x] Primera evaluación real + regla anti-pérdida probada (3 corridas)
+[x] Agente v3.3: reasoning_effort=low + salvamento JSON — validado
+    (corrida 7: 11/11 chunks, 205/209, cero 429)
+[x] ntfy.py: Title RFC 2047, emojis seguros — validado (corrida 7)
+[x] CORRIDA VERDE FINAL (2026-10-15): 205/209 evaluados (98%) ·
+    reporte + commit de memoria + push al teléfono
+[x] Push con detalle en español: título EN + resumen_es + URL
+[x] Push compacto anti-corte: top_n 5 + resumen 140 chars (v3.4)
+[x] Verificación corrida 9: push llega completo y sin cortes
+    ← EN CURSO al generar este manual; marcar [x] al confirmar
 [ ] Primera semana en automático: observar 3-4 corridas del cron
     (memoria, duplicados, horario) antes de expansión mayor
 [ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
