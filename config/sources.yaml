@@ -13,7 +13,7 @@ caps:
 threshold: 70         # nota mínima 0-100 para entrar al informe
 
 notify:
-  top_n: 10           # ítems que van al push de ntfy
+  top_n: 5           # ítems que van al push de ntfy
   max_bytes: 4096
 
 openalex:
