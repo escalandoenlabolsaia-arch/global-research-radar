@@ -1,8 +1,8 @@
 """Agente evaluador — UN agente para todo el radar (manual §6).
-Anti-rotación de catálogos: cada corrida consulta el catálogo REAL de
-cada proveedor y elige el mejor modelo disponible. Nada se rompe cuando
-un modelo cambia de nombre o se retira.
-  Proveedor 1: Groq (GROQ_API_KEY — clave probada del usuario)
+Anti-rotación Y anti rate-limit: consulta el catálogo real de cada
+proveedor, elige el mejor modelo disponible y dosifica las llamadas
+para respetar el TPM del free tier (8k tokens/min en Groq).
+  Proveedor 1: Groq (GROQ_API_KEY)
   Proveedor 2: GitHub Models (GITHUB_TOKEN, models: read — $0)
 Salida SIEMPRE en español: score 0-100 + rubro + región + resumen_es.
 """
@@ -19,12 +19,15 @@ GROQ_BASE = "https://api.groq.com/openai/v1"
 GH_BASE = "https://models.github.ai"
 
 # Preferencia de modelos: primero que exista en el catálogo gana.
-PREF_GROQ = ["llama-3.3-70b", "gpt-oss-120b", "maverick", "kimi-k2", "70b",
-             "120b", "qwen3-32b", "scout", "llama-3.1-8b", "8b"]
+PREF_GROQ = ["120b", "maverick", "kimi-k2", "70b", "qwen3-32b", "scout", "8b"]
 PREF_GH = ["gpt-4.1-mini", "gpt-4o-mini", "mini", "gpt-oss", "4.1", "4o"]
+GH_BLIND = ["openai/gpt-4.1-mini", "openai/gpt-4o-mini"]  # si /catalog no responde
 
-CHUNK = 60          # ítems por llamada al LLM
-SLEEP_BETWEEN = 2   # pausa entre chunks (rate limit amable)
+CHUNK = 20           # ítems por llamada (~2.5k tokens — cabe en TPM free)
+SUMMARY_CHARS = 200  # resumen recortado en el payload
+MAX_TOKENS_OUT = 3000
+SLEEP_BETWEEN = 40   # seg entre chunks: 1 llamada/40s ≈ 3.7k tokens/min < 8k TPM
+RATE_LIMIT_WAIT = 65 # seg extra al recibir 429 (ventana de un minuto)
 
 SYSTEM = ("Sos el evaluador de un radar global de investigación científica, "
           "patentes, salud y tecnología. Recibís ítems nuevos del día (de "
@@ -34,8 +37,8 @@ SYSTEM = ("Sos el evaluador de un radar global de investigación científica, "
           "la lengua que sea, pero tu salida es SIEMPRE en español.")
 
 USER_TMPL = """Calificá cada ítem del 0 al 100. Devolvé SOLO un array JSON \
-válido, sin texto antes ni después, un objeto por ítem, usando EXACTAMENTE \
-el mismo "id" que te paso:
+válido, sin texto antes ni después, sin markdown ni ``` , un objeto por ítem, \
+usando EXACTAMENTE el mismo "id" que te paso:
 
 [{{"id":"...","score":0-100,"rubro":"...","region":"...","resumen_es":"..."}}]
 
@@ -44,7 +47,8 @@ Reglas:
 salud | tech | financiamiento | otro
 - "region": una de America Latina | Norteamerica | Europa | Asia | Africa | \
 Oceania | Global
-- "resumen_es": 1-2 frases en español claro que digan qué es y por qué importa
+- "resumen_es": 1-2 frases en español claro (máx 40 palabras) que digan qué es \
+y por qué importa
 - Score 70+ = merece leerlo alguien que sigue ciencia y tech a diario.
 - Descartado = score bajo. No inventes ítems.
 
@@ -53,23 +57,21 @@ Oceania | Global
 """
 
 
-def _pick_available(ids: list, prefs: list, override: str = "") -> str:
-    """Override del config > primera preferencia presente > primero del catálogo."""
-    if override:
-        return override
-    for p in prefs:
-        for i in ids:
+def _ranked(ids: list, prefs: list) -> list:
+    """Ordena el catálogo según preferencia; sin match, al final."""
+    def clave(i):
+        for pos, p in enumerate(prefs):
             if p and p.lower() in i.lower():
-                return i
-    return ids[0] if ids else ""
+                return pos
+        return len(prefs)
+    return sorted([i for i in ids if i], key=clave)
 
 
 def _groq_models(key: str) -> list:
     try:
         r = get(f"{GROQ_BASE}/models", timeout=30,
                 headers={"Authorization": f"Bearer {key}"})
-        data = r.json().get("data", [])
-        ids = [m.get("id", "") for m in data if m.get("id")]
+        ids = [m.get("id", "") for m in r.json().get("data", []) if m.get("id")]
         log.info("groq: catálogo OK — %d modelos disponibles", len(ids))
         return ids
     except Exception as e:
@@ -84,79 +86,93 @@ def _gh_models(token: str) -> list:
         data = r.json()
         if isinstance(data, dict):
             data = data.get("models", data.get("data", []))
-        ids = []
-        for m in data:
-            mid = m.get("id") if isinstance(m, dict) else str(m)
-            if mid:
-                ids.append(mid)
-        log.info("github models: catálogo OK — %d modelos disponibles", len(ids))
+        ids = [m.get("id") if isinstance(m, dict) else str(m) for m in data]
+        ids = [i for i in ids if i]
+        log.info("github models: catálogo OK — %d modelos", len(ids))
         return ids
     except Exception as e:
-        log.warning("github models: no pude listar catálogo (%s)", e)
+        log.warning("github models: catálogo no disponible (%s) — uso candidatos "
+                    "conocidos", e)
         return []
 
 
 def _chat(url, model, token, messages, timeout=180):
-    """POST al endpoint de chat. Diagnóstico total: URL final tras redirects,
-    status y fragmento del cuerpo en el error."""
-    r = post(url,
-             json={"model": model, "messages": messages, "temperature": 0.2},
-             headers={"Authorization": f"Bearer {token}",
-                      "Accept": "application/json",
-                      "Content-Type": "application/json"},
-             timeout=timeout)
-    body = (r.text or "")[:300].replace("\n", " ")
-    try:
-        data = r.json()
-    except Exception as e:
-        raise RuntimeError(f"HTTP {r.status_code} no-JSON (url final: {r.url}): "
-                           f"{body!r}") from e
-    try:
-        return data["choices"][0]["message"]["content"]
-    except (KeyError, IndexError) as e:
-        raise RuntimeError(f"HTTP {r.status_code} JSON sin 'choices' "
-                           f"(url final: {r.url}): {body!r}") from e
+    """POST al chat con manejo de 429 TPM-aware: espera 65s y reintenta.
+    retries=1 en la capa HTTP (el backoff corto no sirve contra límites
+    por minuto — acá se maneja a mano)."""
+    last = None
+    for intento in range(3):
+        try:
+            r = post(url,
+                     json={"model": model, "messages": messages,
+                           "temperature": 0.2, "max_tokens": MAX_TOKENS_OUT},
+                     headers={"Authorization": f"Bearer {token}",
+                              "Accept": "application/json",
+                              "Content-Type": "application/json"},
+                     timeout=timeout, retries=1)
+            body = (r.text or "")[:300].replace("\n", " ")
+            try:
+                data = r.json()
+            except Exception as e:
+                raise RuntimeError(f"HTTP {r.status_code} no-JSON "
+                                   f"(url final: {r.url}): {body!r}") from e
+            return data["choices"][0]["message"]["content"]
+        except Exception as e:
+            last = e
+            if "429" in str(e) or "Rate limit" in str(e):
+                log.warning("429 rate limit (%s) — espero %ds y reintento "
+                            "(intento %d/3)", model, RATE_LIMIT_WAIT, intento + 1)
+                time.sleep(RATE_LIMIT_WAIT)
+                continue
+            raise
+    raise last
 
 
 def _call_llm(user_msg: str, cfg: dict) -> str:
     agent_cfg = cfg.get("agent", {}) or {}
     messages = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": user_msg}]
+    errores = []
 
-    # 1) GROQ (primario — clave probada)
+    # 1) GROQ — prueba hasta 3 modelos del catálogo (el TPM es POR MODELO:
+    #    si uno está agotado, el siguiente puede responder al instante)
     groq_key = os.environ.get("GROQ_API_KEY", "")
     if groq_key:
-        ids = _groq_models(groq_key)
-        model = _pick_available(ids, PREF_GROQ, agent_cfg.get("groq_model", ""))
-        if model:
+        if agent_cfg.get("groq_model"):
+            candidatos = [agent_cfg["groq_model"]]
+        else:
+            candidatos = _ranked(_groq_models(groq_key), PREF_GROQ)[:3]
+        for m in candidatos:
             try:
-                out = _chat(f"{GROQ_BASE}/chat/completions", model, groq_key,
-                            messages)
-                log.info("agente servido por Groq (%s)", model)
+                out = _chat(f"{GROQ_BASE}/chat/completions", m, groq_key, messages)
+                log.info("agente servido por Groq (%s)", m)
                 return out
             except Exception as e:
-                log.warning("Groq (%s) falló: %s", model, e)
+                errores.append(f"groq/{m}: {e}")
+                log.warning("Groq (%s) falló: %s", m, e)
 
-    # 2) GITHUB MODELS (fallback — $0 con GITHUB_TOKEN)
-    gh_token = os.environ.get("GITHUB_TOKEN", "")
-    if gh_token:
-        ids = _gh_models(gh_token)
-        model = _pick_available(ids, PREF_GH, agent_cfg.get("github_model", ""))
-        if model:
+    # 2) GITHUB MODELS — catálogo si responde; si no, candidatos a ciegas
+    gh = os.environ.get("GITHUB_TOKEN", "")
+    if gh:
+        if agent_cfg.get("github_model"):
+            candidatos = [agent_cfg["github_model"]]
+        else:
+            candidatos = _ranked(_gh_models(gh), PREF_GH)[:2] or GH_BLIND
+        for m in candidatos:
             try:
-                out = _chat(f"{GH_BASE}/inference/chat/completions", model,
-                            gh_token, messages)
-                log.info("agente servido por GitHub Models (%s)", model)
+                out = _chat(f"{GH_BASE}/inference/chat/completions", m, gh, messages)
+                log.info("agente servido por GitHub Models (%s)", m)
                 return out
             except Exception as e:
-                log.warning("GitHub Models (%s) falló: %s", model, e)
+                errores.append(f"gh/{m}: {e}")
+                log.warning("GitHub Models (%s) falló: %s", m, e)
 
-    raise RuntimeError("ningún proveedor LLM pudo responder "
-                       "(Groq y GitHub Models fallaron)")
+    raise RuntimeError("ningún proveedor LLM pudo responder — "
+                       + " | ".join(errores[-3:]))
 
 
 def _extract_json(text: str):
-    """Los LLM a veces envuelven el JSON en ```json ... ``` — se limpia."""
+    """Limpia fences ``` y extrae el array JSON de la respuesta."""
     t = (text or "").strip()
     if t.startswith("```"):
         t = t.strip("`")
@@ -175,7 +191,7 @@ def _extract_json(text: str):
 def _verdicts_for_chunk(chunk: list, cfg: dict) -> dict:
     payload = "\n".join(
         f'- id: {it["id"]} | fuente: {it["source"]} | fecha: {it["published"]} | '
-        f'título: {it["title"]} | resumen: {it["summary"][:300]}'
+        f'título: {it["title"][:150]} | resumen: {it["summary"][:SUMMARY_CHARS]}'
         for it in chunk
     )
     out = _call_llm(USER_TMPL.format(payload=payload), cfg)
@@ -196,7 +212,8 @@ def _verdicts_for_chunk(chunk: list, cfg: dict) -> dict:
 
 
 def evaluate(items: list, cfg: dict) -> list:
-    """Enriquece cada ítem con score/rubro/region/resumen_es, ordena por score."""
+    """Enriquece cada ítem con score/rubro/region/resumen_es, ordena por score.
+    Dosificación: 1 llamada cada ~40s — 220 ítems ≈ 11 chunks ≈ 12-15 min."""
     results = []
     n_chunks = (len(items) + CHUNK - 1) // CHUNK
     for i in range(0, len(items), CHUNK):
