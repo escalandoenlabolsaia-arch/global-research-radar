@@ -2,6 +2,7 @@
 → NTFY → PERSIST. Punto de entrada del workflow y de pruebas manuales.
 """
 import logging
+import os
 import sys
 from collections import defaultdict
 from datetime import date
@@ -83,8 +84,8 @@ def main() -> int:
                   "mañana se reintenta el mismo lote")
         return 1
 
-    # 6-7. DIGEST + NTFY
-    _, encima = _write_report(evaluados, len(nuevos), vistos, umbral)
+    # 6-7. DIGEST + NTFY (Click: un tap en el push abre el informe del día)
+    report_path, encima = _write_report(evaluados, len(nuevos), vistos, umbral)
     top_n = int(cfg.get("notify", {}).get("top_n", 10))
     if encima:
         top = encima[:top_n]
@@ -92,7 +93,11 @@ def main() -> int:
             f"[{e['score']}] {e['title']}\n{e.get('resumen_es', '')[:140]}\n{e['url']}"
             for e in top
         )
-        ntfy.send(f"🔬 Radar global — {len(encima)} hallazgos hoy", body, cfg)
+        repo = os.environ.get("GITHUB_REPOSITORY", "")
+        click = (f"https://github.com/{repo}/blob/main/{report_path}"
+                 if repo else "")
+        ntfy.send(f"🔬 Radar global — {len(encima)} hallazgos hoy",
+                  body, cfg, click_url=click)
     else:
         log.info("nada sobre umbral — no se envía push")
 
