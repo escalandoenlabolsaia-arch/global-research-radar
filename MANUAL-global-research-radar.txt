@@ -268,7 +268,7 @@ global-research-radar/
     Fix v3.4: push compacto — top_n 10→5 + resumen_es recortado a
     140 chars en el push (íntegro en reports/). ~1.4KB por push:
     el formato de la corrida 7, ya probado que llega entero.
-  Corrida 9: VERIFICACIÓN del push compacto — EN CURSO al cierre de
+  Corrida 9: VERIFICACIÓN del push compacto — VERIFICADA al cierre de
              esta edición del manual.
   REGLAS DEL PROYECTO (aprendidas en vivo):
     R1. Archivos Python se pegan COMPLETOS, de una sola vez.
