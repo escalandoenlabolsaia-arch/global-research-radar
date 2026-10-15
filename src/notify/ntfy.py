@@ -2,6 +2,7 @@
 Lección corrida 6: los headers HTTP solo admiten latin-1 — un emoji en el
 Title rompe el envío. Title se envía como RFC 2047 (ntfy lo soporta) y el
 emoji vive en el cuerpo, que viaja UTF-8.
+v3.4: header Click opcional — un tap en el push abre el informe del día.
 """
 import logging
 import os
@@ -15,8 +16,8 @@ NTFY = "https://ntfy.sh"
 
 
 def _title_header(title: str) -> str:
-    """Title apto para header: tal cual si es latin-1-safe; si hay emojis/acentos
-    fuera de latin-1, RFC 2047 (=?utf-8?b?...?=) que ntfy decodifica nativamente."""
+    """Title apto para header: tal cual si es latin-1-safe; si hay emojis
+    fuera de latin-1, RFC 2047 (=?utf-8?b?...?=) que ntfy decodifica."""
     try:
         title.encode("latin-1")
         return title
@@ -34,7 +35,7 @@ def send(title: str, body: str, cfg: dict, click_url: str = "") -> bool:
         return False
     max_bytes = int(cfg.get("notify", {}).get("max_bytes", 4096))
     body = body.encode("utf-8")[:max_bytes - 200].decode("utf-8", "ignore")
-       headers = {
+    headers = {
         "Title": _title_header(title),
         "Tags": "microscope",
         "Priority": "default",
