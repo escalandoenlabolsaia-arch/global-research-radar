@@ -48,13 +48,25 @@ Oceania | Global
 
 
 def _post_chat(url, model, token, messages, timeout=180):
-    """POST real al endpoint de chat/completions (reintentos en common.post)."""
+    """POST al endpoint de chat. Si la respuesta no es JSON de OpenAI,
+    el error INCLUYE status + fragmento del cuerpo (diagnóstico exacto)."""
     r = post(url,
              json={"model": model, "messages": messages, "temperature": 0.2},
              headers={"Authorization": f"Bearer {token}",
+                      "Accept": "application/json",
                       "Content-Type": "application/json"},
              timeout=timeout)
-    return r.json()["choices"][0]["message"]["content"]
+    cuerpo = (r.text or "")[:300].replace("\n", " ")
+    try:
+        data = r.json()
+    except Exception as e:
+        raise RuntimeError(f"respuesta no-JSON (HTTP {r.status_code}): "
+                           f"{cuerpo!r}") from e
+    try:
+        return data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError) as e:
+        raise RuntimeError(f"JSON sin 'choices' (HTTP {r.status_code}): "
+                           f"{cuerpo!r}") from e
 
 
 def _call_llm(user_msg: str) -> str:
