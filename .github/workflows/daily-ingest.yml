@@ -1,0 +1,38 @@
+name: daily-ingest
+
+on:
+  schedule:
+    - cron: "0 9 * * *"     # 09:00 UTC = 06:00 Argentina
+  workflow_dispatch:         # botón manual de prueba
+
+permissions:
+  contents: write            # commitear state/seen.json y reports/
+  models: read               # usar GitHub Models con GITHUB_TOKEN ($0)
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr radar
+        run: python run.py
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}   # opcional, si no existe = ""
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }} # opcional, si no existe = ""
+
+      - name: Commit de memoria e informes
+        run: |
+          git config user.name "radar-bot"
+          git config user.email "actions@github.com"
+          git add state/seen.json reports/ || true
+          git diff --cached --quiet || git commit -m "radar: corrida $(date -u +%F)"
+          git push
