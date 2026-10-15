@@ -27,18 +27,20 @@ def _title_header(title: str) -> str:
             return title.encode("ascii", "ignore").decode() or "Radar global"
 
 
-def send(title: str, body: str, cfg: dict) -> bool:
+def send(title: str, body: str, cfg: dict, click_url: str = "") -> bool:
     topic = os.environ.get("NTFY_TOPIC", "")
     if not topic:
         log.warning("ntfy: NTFY_TOPIC no definido — no se envía")
         return False
     max_bytes = int(cfg.get("notify", {}).get("max_bytes", 4096))
     body = body.encode("utf-8")[:max_bytes - 200].decode("utf-8", "ignore")
-    headers = {
+       headers = {
         "Title": _title_header(title),
         "Tags": "microscope",
         "Priority": "default",
     }
+    if click_url:
+        headers["Click"] = click_url  # un tap en el push abre el informe
     token = os.environ.get("NTFY_TOKEN", "")
     if token:
         headers["Authorization"] = f"Bearer {token}"
