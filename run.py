@@ -4,8 +4,8 @@
 import logging
 import sys
 from collections import defaultdict
-from datetime import date, timezone
-import datetime as dt
+from datetime import date
+from pathlib import Path
 
 from src.config import load
 from src.fetchers import openalex, arxiv, rss_generic
@@ -19,6 +19,7 @@ log = logging.getLogger("radar")
 def _write_report(evaluados, nuevos_n, dedup_n, umbral, path="reports/"):
     hoy = date.today().isoformat()
     encima = [e for e in evaluados if e.get("score", 0) >= umbral]
+    Path(path).mkdir(parents=True, exist_ok=True)
     p = f"{path}{hoy}.md"
     líneas = [
         f"# Radar global — {hoy}",
@@ -42,7 +43,7 @@ def _write_report(evaluados, nuevos_n, dedup_n, umbral, path="reports/"):
                 f"  - <{e['url']}>",
                 "",
             ]
-    open(p, "w", encoding="utf-8").write("\n".join(líneas))
+    Path(p).write_text("\n".join(líneas), encoding="utf-8")
     log.info("reporte escrito: %s", p)
     return p, encima
 
@@ -92,7 +93,15 @@ def main() -> int:
     else:
         log.info("nada sobre umbral — no se envía push")
 
-    # 8. PERSIST
+    # 8. PERSIST — solo queda en memoria lo que el agente EVALUÓ de verdad.
+    #    Lo que quedó fuera (caps o chunk fallido) se reintenta mañana.
+    ids_eval = {e["id"] for e in evaluados}
+    perdidos = [it["id"] for it in nuevos if it["id"] not in ids_eval]
+    for iid in perdidos:
+        seen.pop(iid, None)
+    if perdidos:
+        log.info("persist: %d ítems sin veredicto vuelven al radar mañana",
+                 len(perdidos))
     dedup.save(dedup.prune(seen), "state/seen.json")
     return 0
 
