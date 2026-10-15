@@ -92,6 +92,9 @@ FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERS
     agente no devuelve NADA, seen.json no se guarda y el lote
     completo reintenta. Nada se pierde en silencio. (Validado en
     vivo 3 corridas: 422 y 217 ítems devueltos al radar.)
+    Cada push lleva header Click: un tap abre el informe del día
+    en GitHub. Acceso histórico: carpeta reports/ (agregar a
+    pantalla de inicio) — sin links extra en el push.
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
   caps.per_source: 50 · caps.total: 300 · threshold: 70/100
@@ -314,6 +317,7 @@ global-research-radar/
 [x] Push compacto anti-corte: top_n 5 + resumen 140 chars (v3.4)
 [x] Verificación corrida 9: push llega completo y sin cortes
     ← EN CURSO al generar este manual; marcar [x] al confirmar
+[x] Push con Click → abre el informe del día (acceso móvil sin links)
 [ ] Primera semana en automático: observar 3-4 corridas del cron
     (memoria, duplicados, horario) antes de expansión mayor
 [ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
