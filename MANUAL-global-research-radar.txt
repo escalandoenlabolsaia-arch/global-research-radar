@@ -287,6 +287,10 @@ global-research-radar/
     R9. El push es un teaser, no el informe: compacto por diseño
         (top 5, resumen 140 chars). El detalle íntegro vive en
         reports/ — nunca competir con el límite de la notificación.
+    R10. IndentationError en ntfy.py al aplicar el fix del Click
+              por edición de fragmentos en el editor web.
+    Refuerzo de R1: los archivos Python SIEMPRE se reemplazan
+    completos (Ctrl+A → pegar), nunca por fragmentos.
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
