@@ -206,6 +206,11 @@ global-research-radar/
                                 RFC 2047; si se viera, ntfy.py viejo
       github models: catálogo no disponible — normal, cae a ciegas
       sin push, corrida verde . normal: nada superó el umbral
+      push cortado a mitad de ítem ... texto excede lo que la
+                                notificación muestra → el mensaje
+                                completo queda en la app y en
+                                reports/; mitigación: top_n 5 +
+                                resumen recortado a 140 chars
 
 10) BITÁCORA DE PUESTA EN MARCHA (por qué el código es como es)
   Corrida 1: OpenAlex 401 en pág. 2 (paginación por cursor rota en
