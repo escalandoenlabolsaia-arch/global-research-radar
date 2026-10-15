@@ -102,6 +102,16 @@ Nunca más corridas.
     salud | tech | financiamiento | otro
   • Regiones: America Latina | Norteamerica | Europa | Asia |
     Africa | Oceania | Global
+6) AGENTE EVALUADOR (v3.2 — auto-descubre modelos)
+  • Proveedores en orden: Groq (primario) → GitHub Models (fallback),
+    ambos $0. El código consulta el catálogo REAL de cada proveedor
+    en cada corrida y elige el mejor modelo disponible — las
+    rotaciones de catálogo no rompen nada. Overrides opcionales:
+    agent.groq_model / agent.github_model en sources.yaml.
+  • Diagnóstico LLM: toda respuesta no-JSON o sin 'choices' loguea
+    URL final + status + cuerpo (error auto-explicativo).
+  • Salida SIEMPRE en español: score 0-100 + rubro + región +
+    resumen_es. Rubros y regiones sin cambios.
 
 7) SEGURIDAD (estado real)
   • Secrets en GitHub Secrets:
