@@ -1,8 +1,8 @@
 =====================================================================
-  MANUAL — GLOBAL-RESEARCH-RADAR  (v3.5 · FASE 1 CERRADA — MODO
-  AUTOMÁTICO)
-  Monitoreo global de todo lo público que se investiga, descubre,
-  patenta, aprueba y lanza · 1 agente evaluador · Costo $0
+MANUAL — GLOBAL-RESEARCH-RADAR  (v3.6 · FASE 2 CERRADA — MODO
+AUTOMÁTICO)
+Monitoreo global de todo lo público que se investiga, descubre,
+patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
 
 1) MISIÓN
@@ -20,7 +20,7 @@ ninguna fuente hasta que se publica o patenta — y en ese momento
 exacto este sistema la capta. Cobertura: el universo observable.
 
 3) MAPA DE FUENTES — POR DOMINIO
-(✅ = activo hoy · ⏳ = fase futura)
+(✅ = activo hoy · ⏳ = fase futura · ⚠️ = bloqueado, ver §10)
 
   A. INVESTIGACIÓN CIENTÍFICA
   ✅ OpenAlex ......... columna vertebral (~250M trabajos, todos
@@ -35,18 +35,37 @@ exacto este sistema la capta. Cobertura: el universo observable.
      AfricArXiv · PsyArXiv · EngRxiv · AgriRxiv
 
   C. DESCUBRIMIENTOS Y ANUNCIOS
-  ✅ RSS genérico ..... 5 feeds vivos: Nature (75), Phys.org (30),
-                       Ars Technica (20), Science (10), MIT TR (10).
-                       1 feed nuevo = 1 línea en sources.yaml.
+  ✅ RSS genérico ..... 6 feeds vivos: Nature (75), Phys.org (30),
+                       Ars Technica (20), Science (10), MIT TR (10),
+                       WHO News (12, max_items). 1 feed nuevo = 1
+                       línea en sources.yaml. max_items (opcional)
+                       recorta feeds pesados.
   ⏳ EurekAlert! · CERN · Max Planck · CNRS · RIKEN · CAS · CSIC ·
      CONICET · ICGEB · EMBO · IEEE · ACS · RSC
 
   D. PATENTES (100+ oficinas) ⏳ fase 3
      WIPO PATENTSCOPE · USPTO PatentsView · EPO OPS · Lens.org
 
-  E. MEDICAMENTOS · ENSAYOS · REGULATORIO ⏳ fase 2
-     WHO ICTRP · ClinicalTrials.gov v2 · openFDA · EMA · WHO PQ ·
-     ANVISA · TGA · Health Canada · PMDA
+  E. MEDICAMENTOS · ENSAYOS · REGULATORIO ✅ FASE 2 CERRADA
+  ✅ ClinicalTrials.gov API v2 ... ~530k estudios, sponsors del mundo
+                       entero. Filtro: fase 2 y 3 + ventana days_back
+                       (LastUpdatePostDate). Sin key, 1 request/corrida
+                       (~150 KB con `fields`).
+  ✅ openFDA ........... 3 entradas, cada una su cupo caps propio:
+                       · farmacos  = drug/drugsfda, aprobaciones ORIG
+                         con estado AP (NDA/BLA nuevos + ANDA genéricos;
+                         los SUPPL se descartan: ruido administrativo)
+                       · dispositivos_510k = device/510k, autorizaciones
+                         510(k) (dataset carga ~1x/mes → days_back 35)
+                       · dispositivos_pma = device/pma, aprobaciones PMA
+                         y suplementos (mismo régimen mensual)
+  ⚠️ WHO ICTRP ......... SIN API pública y SIN export directo: el portal
+                       (trialsearch.who.int) es un WebForms sin REST
+                       (Download.aspx = página de test de 1 registro,
+                       export.aspx muerta) y el dataset semanal completo
+                       hoy se entrega SOLO llenando un formulario de WHO
+                       (acceso a carpeta Sharepoint). Ver §10 y §13.
+  ⏳ EMA · WHO PQ · ANVISA · TGA · Health Canada · PMDA
 
   F. BIOSCIENCIAS PROFUNDAS ⏳
      NCBI (PubMed, GenBank, SRA) · EMBL-EBI (Europe PMC, UniProt)
@@ -61,51 +80,55 @@ exacto este sistema la capta. Cobertura: el universo observable.
 
   GEOGRAFÍA/IDIOMAS: los agregadores ya indexan producción de todos
   los países; el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
-  castellano — el multilingüismo NO es barrera.
+  castellano — el multilingüismo NO es barrera. Los ensayos además
+  traen países de los sites en el resumen → región acertada.
 
 4) PIPELINE DIARIO (implementado y validado en 11 corridas reales)
 FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
   • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
-    daily-ingest → Run workflow. Duración típica: 15-20 min.
+    daily-ingest → Run workflow. Duración típica: 15-25 min.
   • FETCH: cada fuente con try propio — una caída NO frena la
-    corrida. HTTP con reintentos/backoff. Números típicos:
-    openalex 200 · arxiv 100 · rss 145 = 445.
-  • NORMALIZE: esquema único + id estable (doi:... si hay DOI,
-    si no sha256 del título normalizado).
+    corrida. HTTP con reintentos/backoff. Números típicos con fase 2:
+    openalex 200 · arxiv 100 · rss 157 (incl. WHO News 12) ·
+    clinicaltrials 100 · openfda 20-215 según cargas del mes.
+  • NORMALIZE: esquema único + id estable con jerarquía (v3.6):
+    id de dominio (nct: / fda:) > doi:... > sha256 del título
+    normalizado. Los ids de dominio sobreviven a títulos que cambian
+    (un ensayo que se actualiza no renace como ítem nuevo).
   • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
     Y dentro de la misma corrida (dos fuentes, misma noticia).
-    Validado en vivo: duplicados inter-fuente e inter-corrida
-    cazados. En régimen: 445 fetch → ~55-60 genuinamente nuevos.
-  • CAPS: round-robin entre fuentes. Ninguna acapara el lote.
+    En régimen: ~650 fetch → lo genuinamente nuevo del día.
+  • CAPS: round-robin entre fuentes + per_source_override (v3.6):
+    las fuentes biosalud a 25/fuente, el resto mantiene 50. Sin el
+    bloque override el comportamiento es idéntico al de siempre.
   • EVALUATE: chunks de 20 ítems, ritmo 50s (ver §6). Si un chunk
     falla, esos ítems quedan fuera de ESTA corrida.
   • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por
     score. 1 archivo por día: la ÚLTIMA corrida del día es la que
-    queda en main — si corrés manual dos veces el mismo día, la
-    segunda reemplaza al reporte de la primera (por diseño). CON
-    EL CRON 1x/DÍA NUNCA SE PISA NADA. Y toda versión anterior de
-    cualquier corrida vive en el git History del archivo (GitHub →
-    reports/ → History) — el histórico completo está preservado
-    gratis y para siempre. El reporte diario es la fuente COMPLETA.
+    queda en main. El git History preserva TODO el histórico.
   • NTFY (push diario): top 5 destacados, formato por ítem:
     [score] título original + resumen_es (recortado a 140 chars)
-    + URL. Compacto a propósito (~0.9-1.4KB): entra entero en la
-    notificación del teléfono. El detalle íntegro vive en reports/.
-    Header Click: UN TAP en el push abre el informe del día en
-    GitHub (GITHUB_REPOSITORY la inyecta Actions solo). Acceso
-    histórico a reports/ desde el celular: agregar la carpeta a
-    pantalla de inicio — sin links extra en el push.
+    + URL. Header Click: UN TAP abre el informe del día en GitHub.
   • PERSIST — regla anti-pérdida: SOLO se marca "visto" lo que el
     agente evaluó de verdad. Lo dejado fuera por caps o por un
     chunk fallido se borra de la memoria y SE REINTENTA MAÑANA.
-    Si el agente no devuelve NADA, seen.json no se guarda y el
-    lote completo reintenta. Nada se pierde en silencio.
-    (Validado en vivo 4 corridas seguidas.)
+    (Con las cargas mensuales de 510k/PMA esto hace una cola
+    elegante: ~25 dispositivos/día hasta tragar la carga completa,
+    sin hundir ninguna corrida.)
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
   caps.per_source: 50 · caps.total: 300 · threshold: 70/100
+  caps.per_source_override: clinicaltrials 25 · openfda-* 25
   openalex: days_back 2 · per_page 100 · max_pages 2
-  arxiv: max_results 100 · notify: top_n 5 · max_bytes 4096
+  arxiv: max_results 100
+  clinicaltrials: days_back 2 · phases [PHASE2, PHASE3] ·
+                  max_results 100
+  openfda.farmacos: days_back 15 (lag de publicación ~1 semana,
+                  verificado en vivo) · limit 100
+  openfda.dispositivos_510k / _pma: days_back 35 (carga mensual del
+                  dataset) · limit 100
+  rss.WHO News: max_items 12 (feed histórico gigante)
+  notify: top_n 5 · max_bytes 4096
   agent: groq_model "" / github_model "" (vacío = auto-descubre)
 El agente NO resume todo: SELECCIONA lo mejor del día. Más
 cobertura = subir caps/days_back. Menos ruido = subir threshold.
@@ -113,69 +136,55 @@ Nunca más corridas.
 
 6) AGENTE EVALUADOR (v3.3 — anti-rotación, TPM-aware, reasoning-safe)
   PROVEEDORES (en orden, ambos $0):
-    1. Groq ........ GROQ_API_KEY — clave validada (catálogo 11
-                     modelos). PRIMARIO. Sirvió el 100% de los
-                     chunks en las corridas 7 y 11 (gpt-oss-120b).
+    1. Groq ........ GROQ_API_KEY — PRIMARIO (100% de los chunks en
+                     las corridas 7 y 11 con gpt-oss-120b).
     2. GitHub Models  GITHUB_TOKEN del workflow (models: read) —
-                     FALLBACK. Ojo: su /catalog no siempre responde
-                     desde runners → si falla, intenta a ciegas
-                     openai/gpt-4.1-mini y openai/gpt-4o-mini.
-  AUTO-DESCUBRIMIENTO: en CADA corrida se consulta el catálogo REAL
-  del proveedor (GET /models) UNA sola vez (cache interno) y se
-  elige por preferencia:
-    Groq: 120b → maverick → kimi-k2 → 70b → qwen3-32b → scout → 8b
-    GH:   gpt-4.1-mini → gpt-4o-mini → mini → gpt-oss
-  Razón: los catálogos rotan (llama-3.3-70b-versatile fue retirado
-  en vivo durante la puesta en marcha). Nunca hardcodear modelos.
+                     FALLBACK. Su /catalog no siempre responde desde
+                     runners → intenta a ciegas openai/gpt-4.1-mini y
+                     openai/gpt-4o-mini.
+  AUTO-DESCUBRIMIENTO: catálogo REAL del proveedor UNA vez por
+  corrida, elegido por preferencia:
+    Groq:  120b → maverick → kimi-k2 → 70b → qwen3-32b → scout → 8b
+    GH:    gpt-4.1-mini → gpt-4o-mini → mini → gpt-oss
+  Razón: los catálogos rotan. Nunca hardcodear modelos (R2).
   Override manual opcional: agent.groq_model / agent.github_model.
-  RESPECTO AL RATE LIMIT (lecciones de las corridas 5-7):
+  RATE LIMIT (lecciones de las corridas 5-7):
     • Free tier Groq: 8.000 tokens/minuto POR MODELO.
     • CHUNK = 20 ítems/llamada (~2.5k tokens) — nunca más grande.
     • Resumen en payload recortado a 200 chars, título a 150.
-    • Pausa 50s entre chunks: validada — corridas 7 y 11 con
-      CERO 429.
-    • Ante 429: espera 65s y reintenta ×3 (ventana de un minuto).
-    • Cascada: prueba hasta 3 modelos de Groq — si el TPM de uno
-      está agotado, el siguiente puede responder al instante.
+    • Pausa 50s entre chunks: cero 429 en corridas 7 y 11.
+    • Ante 429: espera 65s y reintenta ×3.
+    • Cascada: hasta 3 modelos de Groq por chunk.
     • max_tokens salida: 4000.
-  RESPECTO A LOS MODELOS DE RAZONAMIENTO (lección corrida 6):
-    • gpt-oss es un modelo reasoning: quema tokens de SALIDA
-      pensando antes del JSON → con max_tokens bajo el array salía
-      truncado (causa de 10/11 chunks perdidos en la corrida 6).
-    • Fix: payload con reasoning_effort=low para todo modelo
-      gpt-oss + max_tokens 4000 + resumen_es limitado a 25 palabras.
-    • Validado: de 10/11 chunks perdidos a 1 parcial (corrida 7) a
-      0 fallos (corrida 11: 52/52 evaluados).
-  RESPECTO AL JSON (defensa en profundidad):
-    • Prompt prohíbe markdown y ``` (bloques de código).
-    • Parseo tolerante a fences igualmente.
-    • Si el array vino truncado: regex de rescate extrae los
-      objetos completos — se pierde 0-1 ítem, no 20. (Validado en
-      vivo: "salvé 16/16 objetos completos".)
+  MODELOS DE RAZONAMIENTO (lección corrida 6):
+    • gpt-oss quema tokens de SALIDA pensando → reasoning_effort=low
+      + max_tokens 4000 + resumen_es limitado a 25 palabras.
+  JSON (defensa en profundidad):
+    • Prompt prohíbe markdown y ```. Parseo tolerante a fences.
+    • Array truncado → regex de rescate: se pierde 0-1 ítem, no 20.
   SALIDA: SIEMPRE español. Por ítem: score 0-100 + rubro + región +
   resumen_es. Rubros: investigacion | preprint | descubrimiento |
   patente | salud | tech | financiamiento | otro
   Regiones: America Latina | Norteamerica | Europa | Asia | Africa |
             Oceania | Global
-  DIAGNÓSTICO: toda respuesta no-JSON o sin 'choices' loguea URL
-  final + HTTP status + fragmento del cuerpo. Errores auto-explicativos.
+  FASE 2: los ítems de ensayos llegan con estado, condición,
+  intervención, sponsor, N y países en el resumen; los FDA con
+  tipo (NDA/BLA/ANDA/510k/PMA), sponsor y vía. Con eso el agente
+  separa genérico rutino de novedad real sin ningún cambio de
+  código en evaluator.py (v3.3 intacto).
 
 7) SEGURIDAD (estado real)
   • Secrets en GitHub Secrets:
-      NTFY_TOPIC .... CREADO y PROBADO (push al teléfono OK;
-                      valor NO documentado — práctica correcta)
-      GROQ_API_KEY .. CREADO y VALIDADO (auth OK, catálogo 11 modelos)
+      NTFY_TOPIC .... CREADO y PROBADO (valor NO documentado)
+      GROQ_API_KEY .. CREADO y VALIDADO
       NTFY_TOKEN .... opcional, no creado (blindaje: topic reservado)
-  • GITHUB_TOKEN: automático del workflow. Importante: NO se inyecta
-    solo — debe mapearse en el env del step (lección de la corrida 2).
-    Permisos declarados: contents: write + models: read.
-  • ntfy.sh público: quien sepa el topic lee. Mitigado: topic largo
-    + aleatorio + jamás documentado.
-  • NTFY TÉCNICO: los headers HTTP solo admiten latin-1 — un emoji
-    en el Title rompe el envío. El Title viaja como RFC 2047
-    (=?utf-8?b?...?=, ntfy lo decodifica) y los emojis viven en el
-    cuerpo, que va UTF-8. (Lección corrida 6, validado corrida 7.)
-  • Polite pool: polite_email real en sources.yaml (configurado).
+  • GITHUB_TOKEN: automático del workflow, mapeado en el env del
+    step. Permisos: contents: write + models: read.
+  • ntfy.sh público: topic largo + aleatorio + jamás documentado.
+  • NTFY TÉCNICO: headers latin-1 → Title como RFC 2047; emojis solo
+    en el cuerpo UTF-8 (lección corrida 6, validada corrida 7).
+  • Polite pool: polite_email en sources.yaml (dejar el real si ya
+    está; al pegar el yaml nuevo NO pisarlo con el placeholder).
   • No es asesoramiento financiero/médico: prioriza, vos decidís.
 
 8) ESTRUCTURA (real, en el repo)
@@ -185,11 +194,15 @@ global-research-radar/
 ├─ config/sources.yaml                 ← TODO el radar se controla acá
 ├─ src/
 │  ├─ config.py          carga del YAML
-│  ├─ smoke.py           prueba de fetchers sin agente (opcional)
+│  ├─ smoke.py           prueba de los 5 fetchers sin agente
 │  ├─ fetchers/          common.py (GET/POST + diagnóstico),
-│  │                     openalex.py, arxiv.py, rss_generic.py
-│  ├─ pipeline/          normalize.py, dedup.py, caps.py
-│  ├─ agent/             evaluator.py (v3.3 TPM + reasoning aware)
+│  │                     openalex.py, arxiv.py, rss_generic.py,
+│  │                     clinicaltrials.py (NUEVO v3.6),
+│  │                     openfda.py (NUEVO v3.6: 3 endpoints)
+│  ├─ pipeline/          normalize.py (ids de dominio v3.6),
+│  │                     dedup.py, caps.py (override v3.6)
+│  ├─ agent/             evaluator.py (v3.3 TPM + reasoning aware —
+│                         INTACTO en fase 2)
 │  └─ notify/            ntfy.py (Title RFC 2047 + header Click)
 ├─ run.py                orquestador completo + persist selectivo +
 │                          push compacto (top 5, resumen 140) + Click
@@ -198,7 +211,7 @@ global-research-radar/
 ├─ reports/              AAAA-MM-DD.md por corrida — fuente completa;
 │                          1 archivo/día, histórico en git History
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.5)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.6)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -206,100 +219,77 @@ global-research-radar/
       fetch total: N → dedup: X nuevos / Y vistos → caps: A → B →
       groq: catálogo OK (1 vez) → agente servido por Groq (modelo) →
       agente: chunk i/j → reporte escrito → ntfy: enviado → push 📱
-  • La corrida tarda 15-20 min: es el free tier mandando el ritmo.
-  • El push muestra los 5 mejores del día; TOCAR la notificación
-    abre el informe completo en GitHub; el archivo está en
-    reports/AAAA-MM-DD.md (todos los ítems sobre umbral, con rubro,
-    región y resumen íntegro).
-  • Agregar fuente RSS: 1 línea en sources.yaml (name, url, lang).
-  • Ajustar: threshold ↑ menos ruido · caps.total ↑ más cobertura ·
-    openalex.days_back ↑ más ventana.
+  • La corrida tarda 15-25 min: free tier + cargas mensuales FDA.
   • Síntomas y significado exacto:
       openalex: 0 ítems ....... revisar polite_email
       rss: falló (404) ........ URL muerta → cambiar en yaml
-      KeyError 'GITHUB_TOKEN' . falta mapearlo en env del workflow
-      404 model_not_found ..... el código ya se defiende (catálogo
-                                real); si se viera, cambiar PREF_GROQ
-      413 Payload Too Large ... chunks demasiado grandes — verificar
-                                CHUNK=20 en evaluator.py
-      "JSON truncado — salvé N/M objetos" .. defensa funcionando;
-                                si N queda chico, bajar SUMMARY_CHARS
-      sin JSON parseable ...... persiste tras el fix → revisar que
-                                gpt-oss lleve reasoning_effort=low
-      latin-1 codec error ..... emojis en headers → Title ya viaja
-                                RFC 2047; si se viera, ntfy.py viejo
-      push cortado a mitad de ítem . el texto excede lo que la
-                                notificación muestra. Fix aplicado:
-                                top_n 5 + resumen recortado 140.
+      arxiv: 429/503 .......... rate limit de arXiv; en runners
+                                sí corre (visto solo desde IPs
+                                compartidas en pruebas locales)
+      openfda: "0 eventos en la ventana" .... día sin aprobaciones
+                                nuevas: NORMAL (404 vacío), no error
+      clinicaltrials: 0 ítems . ventana sin actualizaciones fase 2-3
+                                (fines de semana): normal
+      HTTP 400 en openFDA ..... esquema cambió (R11): revisar campos
+                                contra 1 registro real (limit=1 sin
+                                search) y ajustar el fetcher
+      404 model_not_found ..... el código ya se defiende; si se
+                                viera, cambiar PREF_GROQ
+      "JSON truncado — salvé N/M objetos" .. defensa funcionando
+      latin-1 codec error ..... emojis en headers → ntfy.py viejo
+      push cortado ............ fix v3.4 activo (top 5, 140 chars)
       IndentationError ........ pegado parcial de un .py → R1:
                                 reemplazar el archivo COMPLETO
       corrida manual el mismo día . el reporte del día se regenera
-                                (última gana); la versión anterior
-                                queda en git History. Con cron 1x/
-                                día nunca ocurre.
-      github models: catálogo no disponible — normal, cae a ciegas
+                                (última gana); git History preserva.
       sin push, corrida verde . normal: nada superó el umbral
+      510k/PMA: 0 ítems varios días . normal: el dataset carga ~1x/
+                                mes; el resto del radar sigue vivo
 
 10) BITÁCORA DE PUESTA EN MARCHA (por qué el código es como es)
-  Corrida 1: OpenAlex 401 en pág. 2 (paginación por cursor rota en
-             runners) + evaluator.py incompleto al pegarse en el repo.
-    Fix: paginación por page numérica, tolerante por página; evaluator
-    completo; common.py separa GET/POST y loguea body de errores;
-    run.py crea reports/ y persiste solo lo evaluado.
-  Corrida 2: KeyError 'GITHUB_TOKEN' — los secrets de GitHub no se
-             inyectan como variables de entorno solos.
-    Fix: mapear GITHUB_TOKEN en el env del step del workflow.
-  Corrida 3: GitHub Models devolvía no-JSON sin detalle visible.
-    Fix: diagnóstico status+cuerpo en errores; se crea GROQ_API_KEY.
-  Corrida 4: GitHub Models: HTTP 200 con cuerpo 'OK' (no chat). Groq:
-             auth OK pero modelo retirado del catálogo (404
-             model_not_found) — los nombres hardcodeados son frágiles.
-    Fix: auto-descubrimiento del catálogo real en cada corrida;
-         Groq primario; overrides opcionales en sources.yaml.
-  Corrida 5: el auto-descubrimiento FUNCIONÓ (eligió gpt-oss-120b
-             solo), pero el free tier dijo basta: chunk de 60 ítems
-             pedía 9.320 tokens vs límite de 8.000/min (413 + 429).
-    Fix v3.2: CHUNK 20, pausa larga, espera 65s ante 429, cascada de
-    3 modelos Groq, GH a ciegas con 2 candidatos.
-  Corrida 6: PRIMERA EVALUACIÓN REAL (chunk 3/11 → 20/20 veredictos,
-             primer reporte escrito). Pero 10/11 chunks fallaron:
-             gpt-oss-120b es un modelo de RAZONAMIENTO — quema tokens
-             de salida pensando y el JSON salía truncado. Además ntfy
-             rechazó el push: el 🔬 del Title no cabe en latin-1.
-             La regla anti-pérdida devolvió los 422 ítems al radar ✓.
-    Fix v3.3: reasoning_effort=low para gpt-oss, max_tokens 4000,
-    salvamento de JSON truncado por regex, catálogo 1 vez por
-    corrida, Title ntfy como RFC 2047.
-  Corrida 7: VERDE COMPLETA (2026-10-15). Cero 429 (pausa 50s clavó
-             el TPM). 11/11 chunks, 205/209 evaluados (98%). Chunk 10
-             truncado → salvamento rescató 16/16 (solo 4 a reintento).
-             ntfy: enviado (1333 bytes), push recibido. Commit de
-             memoria e informes OK. Dedup fuzzy inter-corrida: 23
-             cazados. FASE 1 CERRADA (primera vez).
-  Corrida 8: push con detalle en español (resumen_es agregado al
-             body): formato validado — título original en inglés
-             (identificador exacto para búsqueda/cita) + resumen
-             castellano + URL. Pero la NOTIFICACIÓN se cortó a mitad
-             de un ítem: el cuerpo (~2.5KB con resúmenes) excede lo
-             que la burbuja de Android muestra.
-    Fix v3.4: push compacto — top_n 10→5 + resumen_es recortado a
-    140 chars en el push (íntegro en reports/). ~1.4KB por push.
-  Corrida 9: VERIFICACIÓN del push compacto — COMPLETA Y SIN CORTES.
-  Corrida 10: IndentationError en ntfy.py al aplicar el fix del
-              header Click por edición de fragmentos en el editor
-              web. El crash fue en el import — no corrió nada,
-              estado intacto.
-    Fix: R1 reforzada — archivos Python SIEMPRE se reemplazan
-    completos (Ctrl+A → pegar), nunca por fragmentos. Re-pase
-    completo de ntfy.py y run.py.
-  Corrida 11: VERDE PERFECTA — CIERRE DE FASE 1 (2026-10-15). Modo
-              estacionario del radar: 445 fetch → 389 filtrados por
-              memoria → 56 genuinamente nuevos → caps 52 → 3/3
-              chunks → 52/52 evaluados (100%, cero 429, cero
-              truncados) → reporte → ntfy 888 bytes con header
-              Click → persist: 4 a reintento. El sistema ya solo
-              procesa lo nuevo del planeta y la memoria hace el
-              resto. Push y Click verificados en el teléfono.
+  [Fase 1 — corridas 1 a 11: ver git History de este archivo / v3.5.
+   Hitos: OpenAlex paginación por página numérica; GITHUB_TOKEN en
+   env del step; auto-descubrimiento de modelos (R2); CHUNK 20 + 429
+   backoff + cascada (v3.2); reasoning_effort=low + salvamento JSON +
+   Title RFC 2047 (v3.3); push compacto + Click + R1 reforzada
+   (v3.4/v3.5); corrida 11 verde perfecta 52/52 → FASE 1 CERRADA.]
+  FASE 2 (biosalud) — puesta en marcha por sondeos en vivo (8 rondas
+  de probes contra las APIs reales antes de escribir código):
+    Sondeo 1-3: CT.gov v2 OK (1.413 estudios fase 2-3/semana); los
+      paths de `fields` van en lowercase JSON (400 con camelCase de
+      módulo). openFDA: el sort anidado está prohibido (400); el '+'
+      dentro del rango rompe el parser (500 parse_exception); con
+      espacios + dash-dates 510k/PMA responden (37 y 20 registros en
+      lo que va de octubre).
+    Sondeo 4-6: drugsfda respondía 404 A TODO (hasta Pfizer): el
+      esquema cambió con el refresh del 14/10 — el campo es
+      submissions.submission_status_date (YYYYMMDD) y los estados son
+      códigos AP/TA, no "Approved". Con eso: 81 eventos octubre, ~300-
+      400/mes. ICTRP: sin REST (/api 404), export.aspx muerta,
+      Download.aspx = test de 1 registro con login test/test.
+    Sondeo 7-8 + web: el export semanal de ICTRP hoy se entrega
+      SOLO por formulario de acceso a Sharepoint (no es $0 ni
+      programático). La página de descargas de WHO carga los zips por
+      JS (Kendo) sin endpoint público. drugsfda: lag de publicación
+      ~1 semana (eventos se cortan ~9-12/10 estando a 17/10). 510k/
+      PMA: carga mensual (datos hasta ~5/10, next ~5/11).
+  DECISIONES DE DISEÑO FASE 2:
+    • ids de dominio (nct:/fda:) para que una actualización de un
+      ensayo no entre como ítem nuevo (normalize v3.6).
+    • per_source_override en caps: 25 para biosalud sin tocar las
+      50 de fase 1; sin el bloque, el camino clásico queda byte a
+      byte (guard explícito + test de regresión local).
+    • farmacos = solo ORIG con estado AP (los SUPPL de labeling/
+      CMC son ruido); ANDA (genéricos) entra: es un evento real y
+      el agente lo puntúa bajo el umbral.
+    • ventanas anchas (15/35 días) en vez de trabajos mensuales
+      manualmente: la dedup cobra cada decisión UNA vez y la regla
+      anti-pérdida hace la cola (~25/día) hasta tragar la carga.
+    • WHO News RSS (max_items 12) compensa parte de la cobertura
+      WHO que deja ICTRP gateado, a costo 0 y 1 línea de yaml.
+    • Validación local completa antes de subir: compile + unit
+      tests de caps/normalize + smoke en vivo de 5 fetchers +
+      mini-pipeline de 2 pasadas con regla anti-pérdida verificada.
   REGLAS DEL PROYECTO (aprendidas en vivo):
     R1. Archivos Python se pegan COMPLETOS, de una sola vez
         (Ctrl+A → pegar). Nunca por fragmentos.
@@ -312,55 +302,72 @@ global-research-radar/
         pensando: reasoning_effort=low o el JSON se trunca.
     R8. Los headers HTTP solo admiten latin-1: emojis fuera de los
         headers (Title viaja RFC 2047; emoji solo en el cuerpo).
-    R9. El push es un teaser, no el informe: compacto por diseño
-        (top 5, resumen 140 chars). El detalle íntegro vive en
-        reports/ — nunca competir con el límite de la notificación.
-    R10. El reporte diario se regenera en cada corrida del día
-         (última gana) — el histórico completo lo preserva el git
-         History. El push es efímero; reports/ y git son el archivo.
+    R9. El push es un teaser, no el informe: compacto por diseño.
+    R10. El reporte diario se regenera (última gana); el git
+         History es el archivo histórico.
+    R11. Las APIs cambian de esquema SIN AVISAR (openFDA drugsfda
+         14/10/2026): campos verificados en vivo; 404 masivo =
+         sospechar esquema, no vacío. Loguear status+cuerpo (R4).
+    R12. Los datasets regulatorios tienen lag (drugsfda ~1 semana,
+         510k/PMA ~1 mes): ventanas anchas + dedup, nunca rastrear
+         "lo nuevo de hoy" en fuentes que no lo tienen.
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
   FASE 1 (núcleo) .... ✅ CERRADA Y OPERATIVA — corrida 11 verde
                        (2026-10-15). Modo automático desde el 16.
-  FASE 2 (biosalud) .. ⏳ WHO ICTRP + ClinicalTrials + openFDA
+  FASE 2 (biosalud) .. ✅ CERRADA — ClinicalTrials.gov v2 + openFDA
+                       (3 endpoints) + WHO News RSS, validados en
+                       vivo. WHO ICTRP ⚠️ gateado por WHO (formulario
+                       + Sharepoint): ver §13 para pedir acceso; el
+                       fetcher se agrega en 1 pasada si algún día
+                       hay fuente $0.
   FASE 3 (inventos) .. ⏳ PATENTSCOPE + PatentsView + Lens
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST v3.5
+12) CHECKLIST v3.6
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.5)
+[x] Manual actualizado (este archivo, v3.6)
 [x] Secret NTFY_TOPIC creado y probado (push OK; valor no documentado)
 [x] Workflow permissions: read and write
-[x] polite_email real en sources.yaml
-[x] Código fase 1 completo (15 archivos)
+[x] Código fase 1 completo (15 archivos) — corrida 11 verde
 [x] Secret GROQ_API_KEY creado y validado
 [x] GITHUB_TOKEN mapeado en env del workflow
-[x] Agente v3.3: TPM-aware + reasoning_effort=low + salvamento JSON
-    — validado (corridas 7 y 11: 205/209 y 52/52, cero 429)
-[x] ntfy.py: Title RFC 2047 (emojis seguros) — validado
-[x] Corrida verde final (2026-10-15): 205/209 evaluados · reporte +
-    commit + push al teléfono
-[x] Push con detalle en español: título EN + resumen_es + URL
-[x] Push compacto anti-corte: top_n 5 + resumen 140 — verificado
-    (888 bytes, entero en la notificación)
-[x] Header Click: un tap en el push abre el informe del día —
-    verificado en el teléfono
-[x] Regla anti-pérdida validada en 4 corridas seguidas
-[x] Modo estacionario comprobado (corrida 11): 445 → 56 nuevos →
-    52/52 evaluados
+[x] Agente v3.3 validado (corridas 7 y 11) — INTACTO en fase 2
+[x] ntfy.py: Title RFC 2047 + header Click — validado en teléfono
+[x] Push compacto anti-corte (top 5, 140 chars) — verificado
+[x] Regla anti-pérdida validada en 4 corridas + test local fase 2
+[x] FASE 2: fetchers clinicaltrials.py + openfda.py escritos y
+    calibrados con 8 sondeos en vivo (sin coste: APIs públicas $0)
+[x] FASE 2: ids de dominio nct:/fda: en normalize (retrocompatible)
+[x] FASE 2: caps.per_source_override (biosalud 25, resto 50 intacto)
+[x] FASE 2: WHO News RSS con max_items (feed pesado controlado)
+[x] FASE 2: validación local verde — compile + unit tests + smoke
+    en vivo (670 fetch → 270 al agente, distribución correcta) +
+    mini-pipeline 2 pasadas (dedup + anti-pérdida OK)
 [x] Dudas de archivado resueltas: cron 1x/día no pisa nada;
-    corridas manuales del mismo día se reemplazan (por diseño) y
-    el git History preserva TODO el histórico
-[ ] Primera semana en automático: observar 3-4 corridas del cron
-    (memoria, duplicados, horario)
+    git History preserva TODO
+[ ] Pegar los 9 archivos en GitHub (R1: Ctrl+A → pegar archivo
+    completo) y correr la corrida 12 manual de validación
+[ ] Primera semana fase 2 en automático: observar 3-4 corridas
+    (cola 510k/PMA, genéricos bajo umbral, horario, duplicados)
 [ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
-[ ] Fase 2 (biosalud): WHO ICTRP + ClinicalTrials + openFDA
+[ ] Fase 3 (inventos): PATENTSCOPE + PatentsView + Lens
+[ ] (opcional) WHO ICTRP: llenar el formulario de WHO para pedir
+    acceso al Sharepoint de records nuevos/actualizados (gratis,
+    manual); si llega el acceso, fetcher en 1 pasada
 [ ] (opcional) Retención 180 días de reports/ (ver §13, snippet listo)
 [ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
 
 13) EXTRAS LISTOS PARA ACTIVAR (fases futuras)
+  WHO ICTRP — pedir acceso (opcional, manual, gratis):
+    https://www.who.int/tools/clinical-trials-registry-platform
+    → "Fill this form to request access to the Sharepoint folder for
+    downloading all new/updated records from the ICTRP". Con acceso
+    concedido, el dataset semanal se descarga y se filtra por fecha
+    de registro con parseo streaming (iterparse) — diseño listo,
+    esperar la fuente.
   RETENCIÓN 180 DÍAS de reports/ — reemplazar el paso "Commit de
   memoria e informes" del workflow por este bloque cuando se quiera:
       - name: Commit de memoria e informes
@@ -390,4 +397,3 @@ global-research-radar/
   soporta: si el secret existe, agrega Authorization Bearer).
 
 NOMBRE DEL REPO: global-research-radar
-=====================================================================
