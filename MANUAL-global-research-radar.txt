@@ -1,6 +1,6 @@
 =====================================================================
-MANUAL — GLOBAL-RESEARCH-RADAR  (v3.6 · FASE 2 CERRADA — MODO
-AUTOMÁTICO)
+MANUAL — GLOBAL-RESEARCH-RADAR  (v3.7 · FASE 2 VALIDADA EN
+PRODUCCIÓN — MODO AUTOMÁTICO)
 Monitoreo global de todo lo público que se investiga, descubre,
 patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -211,7 +211,7 @@ global-research-radar/
 ├─ reports/              AAAA-MM-DD.md por corrida — fuente completa;
 │                          1 archivo/día, histórico en git History
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.6)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.7)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -311,24 +311,30 @@ global-research-radar/
     R12. Los datasets regulatorios tienen lag (drugsfda ~1 semana,
          510k/PMA ~1 mes): ventanas anchas + dedup, nunca rastrear
          "lo nuevo de hoy" en fuentes que no lo tienen.
+    R13. El log debe cerrar aritmético (validado en corrida 12):
+         evaluados = suma de chunks · persist = nuevos − evaluados ·
+         chunks = techo(ítems_agente/20). Si no cierra, hay bug:
+         no lo ignores.
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
   FASE 1 (núcleo) .... ✅ CERRADA Y OPERATIVA — corrida 11 verde
                        (2026-10-15). Modo automático desde el 16.
-  FASE 2 (biosalud) .. ✅ CERRADA — ClinicalTrials.gov v2 + openFDA
-                       (3 endpoints) + WHO News RSS, validados en
-                       vivo. WHO ICTRP ⚠️ gateado por WHO (formulario
-                       + Sharepoint): ver §13 para pedir acceso; el
-                       fetcher se agrega en 1 pasada si algún día
-                       hay fuente $0.
+  FASE 2 (biosalud) .. ✅ CERRADA Y VALIDADA EN PRODUCCIÓN — corrida
+                       12 verde a la primera (2026-10-16): 670 fetch,
+                       118/139 evaluados, 234 al persist, 7 chunks.
+                       ClinicalTrials.gov v2 + openFDA (3 endpoints)
+                       + WHO News RSS. WHO ICTRP ⚠️ gateado por WHO
+                       (formulario + Sharepoint): ver §13 para pedir
+                       acceso; el fetcher se agrega en 1 pasada si
+                       algún día hay fuente $0.
   FASE 3 (inventos) .. ⏳ PATENTSCOPE + PatentsView + Lens
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST v3.6
+12) CHECKLIST v3.7
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.6)
+[x] Manual actualizado (este archivo, v3.7)
 [x] Secret NTFY_TOPIC creado y probado (push OK; valor no documentado)
 [x] Workflow permissions: read and write
 [x] Código fase 1 completo (15 archivos) — corrida 11 verde
@@ -348,11 +354,22 @@ global-research-radar/
     mini-pipeline 2 pasadas (dedup + anti-pérdida OK)
 [x] Dudas de archivado resueltas: cron 1x/día no pisa nada;
     git History preserva TODO
-[ ] Pegar los 9 archivos en GitHub (R1: Ctrl+A → pegar archivo
-    completo) y correr la corrida 12 manual de validación
-[ ] Primera semana fase 2 en automático: observar 3-4 corridas
-    (cola 510k/PMA, genéricos bajo umbral, horario, duplicados)
-[ ] Ajuste fino threshold/caps con datos reales de la 1ª semana
+[x] Pegar los 9 archivos en GitHub y corrida 12 manual: VERDE a la
+    primera — todos los checks del README-pegado OK (WHO News 12,
+    openfda 213, caps override biosalud 25x4, 670 fetch, 7 chunks)
+[ ] Semana de observación (corridas 13-19 en automático): cada día
+    mirar UNA línea del log — "persist: N ítems sin veredicto".
+    Protocolo de decisión:
+    · persist N se achica o estable → todo bien, no tocar NADA
+    · persist N crece 3+ días seguidos → el pool se ahoga: bajar
+      per_source en sources.yaml o subir threshold de corte
+    · arxiv 429 dos días seguidos → sources.yaml: arxiv
+      days_back: 2 → 4 (seguro gratis: dedup absorbe duplicados)
+    · día 2 con números inflados o raros → NO tocar: el día 1
+      biosalud vino con ventanas históricas completas, la dedup
+      acomoda solo en 2-3 días
+[ ] Ajuste fino threshold/caps SOLO con datos reales de la semana
+    13-19 (nunca a ojo después de una sola corrida)
 [ ] Fase 3 (inventos): PATENTSCOPE + PatentsView + Lens
 [ ] (opcional) WHO ICTRP: llenar el formulario de WHO para pedir
     acceso al Sharepoint de records nuevos/actualizados (gratis,
