@@ -413,4 +413,5 @@ global-research-radar/
   topic → crear access token → secret NTFY_TOKEN (ntfy.py ya lo
   soporta: si el secret existe, agrega Authorization Bearer).
 
+Día cerrado. Balance: FASE 2 pegada, corrida 12 verde a la primera, manual v3.7 con el protocolo de observación y la regla R13. Mañana solo me pegás el log de la corrida 13 y miramos una línea: si persist baja de 234. Buen trabajo — el radar ya bucea biosalud solo.
 NOMBRE DEL REPO: global-research-radar
