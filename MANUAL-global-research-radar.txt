@@ -630,4 +630,7 @@ En Name: PATENTSVIEW_API_KEY ← exactamente así, mayúsculas y guión bajo, si
 En Secret: pegás la key → Add secret
 Repetís: LENS_API_TOKEN + el token de Lens
 Ojo con el Name: tiene que ser idéntico al de la tabla. Si escribís patentsview_api_key en minúsculas, el workflow no lo encuentra.
+Qué mirar en la próxima corrida
 
+Las líneas patentsview: y lens: deben cambiar de skip a N ítems cuando cargues los secrets — ese día mirá el log completo (R11: primer contacto en vivo con esas APIs).
+Los 26 truncados de hoy deben volver como nuevos y pasar. Si algún chunk sistemáticamente pierde muchos (como el 8: 12/20), lo anotamos y en el ajuste fino podríamos bajar CHUNK de 20 a 15 — pero por ahora, regla del manual: no tocar, el reintento lo cubre.
