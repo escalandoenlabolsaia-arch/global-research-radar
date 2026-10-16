@@ -1,7 +1,8 @@
 # =========================================================
 # config/sources.yaml — TODO el radar se controla desde acá
-# v3.6 · fase 2 (OpenAlex + arXiv + RSS + ClinicalTrials.gov
-#        + openFDA). WHO ICTRP: gateado (ver manual §10).
+# v3.8 · fase 3 (patentes): Google News patentes (keyless) +
+#        patentsview + lens (se activan con secrets, manual §13).
+#        PATENTSCOPE: gateado (SOAP + registro WIPO, ver §10).
 # =========================================================
 
 # Email para polite pool de OpenAlex/Crossref (mejora rate limits)
@@ -11,11 +12,14 @@ caps:
   per_source: 50      # máx ítems por fuente por corrida
   total: 300          # máx ítems que llegan al agente
   # Fase 2: cupo propio para las fuentes biosalud (el resto queda en 50)
+  # Fase 3: patentes entran al mismo régimen 25
   per_source_override:
     clinicaltrials: 25
     openfda-farmacos: 25
     openfda-510k: 25
     openfda-pma: 25
+    patentsview: 25
+    lens: 25
 
 threshold: 70         # nota mínima 0-100 para entrar al informe
 
@@ -49,6 +53,11 @@ rss:
     # Fase 2 (biosalud): anuncios oficiales de la OMS (brotes, precalificación
     # de medicamentos, emergencias sanitarias). max_items: el feed trae historia.
     - { name: "WHO News",         url: "https://www.who.int/rss-feeds/news-english.xml",  lang: en, max_items: 12 }
+    # Fase 3 (patentes): Google News RSS = la única vía keyless viva para
+    # patentes hoy (sondeo 10: 66 ítems en / 12 es en 3 días). Query
+    # refinada sin ruido vehicular; max_items controla el peso.
+    - { name: "Patentes EN",      url: "https://news.google.com/rss/search?q=%22patent%20granted%22%20OR%20%22patent%20issued%22%20OR%20%22patent%20application%22%20OR%20%22patents%22%20when%3A3d&hl=en&gl=US&ceid=US:en", lang: en, max_items: 15 }
+    - { name: "Patentes ES",      url: "https://news.google.com/rss/search?q=patente%20concedida%20OR%20%22nueva%20patente%22%20OR%20patenta%20when%3A3d&hl=es&gl=AR&ceid=AR:es", lang: es, max_items: 10 }
 
 # ---------------- FASE 2 (biosalud) ----------------
 clinicaltrials:
@@ -66,6 +75,19 @@ openfda:
   dispositivos_pma:         # device/pma — aprobaciones PMA
     days_back: 35
     limit: 100
+
+# ---------------- FASE 3 (patentes / inventos) ----------------
+# patentsview y lens NO hacen requests hasta que existan sus secrets
+# (PATENTSVIEW_API_KEY / LENS_API_TOKEN): sin secret = skip silencioso.
+patentsview:                # USPTO — concesiones (API nuevo, X-Api-Key)
+  days_back: 7              # el USPTO concede los martes: ventana semanal
+  max_results: 100
+  # enabled: false           # válvula de emergencia (como openfda)
+
+lens:                       # 100+ jurisdicciones — publicación global
+  days_back: 7              # las oficinas publican en olas semanales
+  max_results: 100
+  # enabled: false
 
 agent:
   # Vacío = auto-descubre el mejor modelo disponible en cada corrida.
