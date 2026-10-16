@@ -1,6 +1,6 @@
 =====================================================================
-MANUAL — GLOBAL-RESEARCH-RADAR  (v3.7 · FASE 2 VALIDADA EN
-PRODUCCIÓN — MODO AUTOMÁTICO)
+MANUAL — GLOBAL-RESEARCH-RADAR  (v3.8 · FASE 3 LISTA — CORRIDA 13
+PENDIENTE · MODO AUTOMÁTICO)
 Monitoreo global de todo lo público que se investiga, descubre,
 patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -35,16 +35,42 @@ exacto este sistema la capta. Cobertura: el universo observable.
      AfricArXiv · PsyArXiv · EngRxiv · AgriRxiv
 
   C. DESCUBRIMIENTOS Y ANUNCIOS
-  ✅ RSS genérico ..... 6 feeds vivos: Nature (75), Phys.org (30),
+  ✅ RSS genérico ..... 8 feeds vivos: Nature (75), Phys.org (30),
                        Ars Technica (20), Science (10), MIT TR (10),
-                       WHO News (12, max_items). 1 feed nuevo = 1
-                       línea en sources.yaml. max_items (opcional)
+                       WHO News (12, max_items), Patentes EN (15) y
+                       Patentes ES (10) — NUEVO fase 3 (Google News
+                       RSS, query refinada, keyless). 1 feed nuevo =
+                       1 línea en sources.yaml. max_items (opcional)
                        recorta feeds pesados.
   ⏳ EurekAlert! · CERN · Max Planck · CNRS · RIKEN · CAS · CSIC ·
      CONICET · ICGEB · EMBO · IEEE · ACS · RSC
 
-  D. PATENTES (100+ oficinas) ⏳ fase 3
-     WIPO PATENTSCOPE · USPTO PatentsView · EPO OPS · Lens.org
+  D. PATENTES (100+ oficinas) ✅ FASE 3 PEGADA — corrida 13 pendiente
+  ✅ Google News RSS patentes (2 feeds, keyless, vivo — sondeo 10:
+                       66 ítems EN / 12 ES en 3 días). Mientras no
+                       haya keys, es la columna vertebral de patentes
+                       del radar. Compensa como WHO News compensó a
+                       ICTRP: $0, 2 líneas de yaml.
+  ✅ PatentsView ....... USPTO, concesiones (los martes, ~4-5k/semana).
+                       API nuevo: POST search.patentsview.org/api/v1/
+                       patent/ con header X-Api-Key. CÓDIGO LISTO:
+                       se activa AL CREAR el secret PATENTSVIEW_API_KEY
+                       (key gratis por formulario, ver §13). Sin
+                       secret = skip silencioso, cero requests.
+  ✅ Lens.org .......... 100+ jurisdicciones (la más global). API: POST
+                       api.lens.org/patent/search con Bearer token.
+                       CÓDIGO LISTO: se activa con el secret
+                       LENS_API_TOKEN (gratis para uso no comercial,
+                       §13). Sin secret = skip silencioso.
+  ⚠️ WIPO PATENTSCOPE .. SOAP + registro WIPO (WSUser/WSKey): mismo
+                       régimen que ICTRP — el fetcher SOAP se pega en
+                       1 pasada si algún día llegan credenciales.
+  ⚠️ USPTO ODP ......... el nuevo Open Data Portal (data.uspto.gov)
+                       también pide key: cuenta USPTO.gov + MFA.
+                       Alternativa de reserva a PatentsView.
+  ❌ DESCARTADOS en sondeos (7-10): Google Patents XHR (bot-guard,
+     503 "Sorry..."), Espacenet 3.2 (403), Justia RSS (403), API viejo
+     de PatentsView (muerto: hoy sirve la UI del ODP tras AWS WAF).
 
   E. MEDICAMENTOS · ENSAYOS · REGULATORIO ✅ FASE 2 CERRADA
   ✅ ClinicalTrials.gov API v2 ... ~530k estudios, sponsors del mundo
@@ -80,45 +106,48 @@ exacto este sistema la capta. Cobertura: el universo observable.
 
   GEOGRAFÍA/IDIOMAS: los agregadores ya indexan producción de todos
   los países; el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
-  castellano — el multilingüismo NO es barrera. Los ensayos además
-  traen países de los sites en el resumen → región acertada.
+  castellano — el multilingüismo NO es barrera. Los ensayos traen
+  países de los sites en el resumen y las patentes traen jurisdicción
+  y titulares → región acertada.
 
-4) PIPELINE DIARIO (implementado y validado en 11 corridas reales)
+4) PIPELINE DIARIO (validado en 12 corridas reales + proyección local
+   fase 3 del 17/10/2026 con datos vivos: 695 fetch → 349 nuevos →
+   188 al agente, 25 de patentes)
 FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
   • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
     daily-ingest → Run workflow. Duración típica: 15-25 min.
   • FETCH: cada fuente con try propio — una caída NO frena la
-    corrida. HTTP con reintentos/backoff. Números típicos con fase 2:
-    openalex 200 · arxiv 100 · rss 157 (incl. WHO News 12) ·
-    clinicaltrials 100 · openfda 20-215 según cargas del mes.
+    corrida. HTTP con reintentos/backoff. Números típicos con fase 3:
+    openalex 200 · arxiv 100 · rss 182 (incl. Patentes EN 15 + ES 10) ·
+    clinicaltrials 100 · openfda 20-215 según cargas del mes ·
+    patentsview/lens 0 hasta crear sus secrets.
   • NORMALIZE: esquema único + id estable con jerarquía (v3.6):
-    id de dominio (nct: / fda:) > doi:... > sha256 del título
+    id de dominio (nct: / fda: / patent:) > doi:... > sha256 del título
     normalizado. Los ids de dominio sobreviven a títulos que cambian
-    (un ensayo que se actualiza no renace como ítem nuevo).
+    (un ensayo que se actualiza no renace como ítem nuevo; una patente
+    reindexada tampoco). Fetchers fase 3: patentsview → patent:US<num>,
+    lens → patent:lens:<lens_id>.
   • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
     Y dentro de la misma corrida (dos fuentes, misma noticia).
-    En régimen: ~650 fetch → lo genuinamente nuevo del día.
   • CAPS: round-robin entre fuentes + per_source_override (v3.6):
-    las fuentes biosalud a 25/fuente, el resto mantiene 50. Sin el
-    bloque override el comportamiento es idéntico al de siempre.
+    biosalud a 25/fuente, patentes patentsview/lens a 25, el resto
+    mantiene 50.
   • EVALUATE: chunks de 20 ítems, ritmo 50s (ver §6). Si un chunk
     falla, esos ítems quedan fuera de ESTA corrida.
-  • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por
-    score. 1 archivo por día: la ÚLTIMA corrida del día es la que
-    queda en main. El git History preserva TODO el histórico.
+  • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por score.
+    1 archivo por día: la ÚLTIMA corrida del día es la que queda en
+    main. El git History preserva TODO el histórico.
   • NTFY (push diario): top 5 destacados, formato por ítem:
     [score] título original + resumen_es (recortado a 140 chars)
     + URL. Header Click: UN TAP abre el informe del día en GitHub.
   • PERSIST — regla anti-pérdida: SOLO se marca "visto" lo que el
-    agente evaluó de verdad. Lo dejado fuera por caps o por un
-    chunk fallido se borra de la memoria y SE REINTENTA MAÑANA.
-    (Con las cargas mensuales de 510k/PMA esto hace una cola
-    elegante: ~25 dispositivos/día hasta tragar la carga completa,
-    sin hundir ninguna corrida.)
+    agente evaluó de verdad. Lo dejado fuera por caps o por un chunk
+    fallido se borra de la memoria y SE REINTENTA MAÑANA.
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
   caps.per_source: 50 · caps.total: 300 · threshold: 70/100
-  caps.per_source_override: clinicaltrials 25 · openfda-* 25
+  caps.per_source_override: clinicaltrials 25 · openfda-* 25 ·
+                            patentsview 25 · lens 25
   openalex: days_back 2 · per_page 100 · max_pages 2
   arxiv: max_results 100
   clinicaltrials: days_back 2 · phases [PHASE2, PHASE3] ·
@@ -128,13 +157,24 @@ FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERS
   openfda.dispositivos_510k / _pma: days_back 35 (carga mensual del
                   dataset) · limit 100
   rss.WHO News: max_items 12 (feed histórico gigante)
+  rss.Patentes EN: max_items 15 · rss.Patentes ES: max_items 10
+  patentsview: days_back 7 (USPTO concede los martes: ventana
+               semanal) · max_results 100
+  lens: days_back 7 (olas de publicación semanales) · max_results 100
   notify: top_n 5 · max_bytes 4096
   agent: groq_model "" / github_model "" (vacío = auto-descubre)
+  Cada fetcher fase 3 además acepta enabled: false (válvula de
+  emergencia, como openfda).
 El agente NO resume todo: SELECCIONA lo mejor del día. Más
 cobertura = subir caps/days_back. Menos ruido = subir threshold.
 Nunca más corridas.
 
 6) AGENTE EVALUADOR (v3.3 — anti-rotación, TPM-aware, reasoning-safe)
+  INTACTO desde fase 1: la fase 3 no lo tocó NI una línea. El rubro
+  "patente" ya existía en su vocabulario y ahora sí recibe material
+  real (noticias de patentes hoy; patentes crudas cuando se activen
+  PatentsView/Lens — el resumen trae jurisdicción, titular e inventores
+  para que separe patente estratégica de trámite rutinario).
   PROVEEDORES (en orden, ambos $0):
     1. Groq ........ GROQ_API_KEY — PRIMARIO (100% de los chunks en
                      las corridas 7 y 11 con gpt-oss-120b).
@@ -172,12 +212,18 @@ Nunca más corridas.
   tipo (NDA/BLA/ANDA/510k/PMA), sponsor y vía. Con eso el agente
   separa genérico rutino de novedad real sin ningún cambio de
   código en evaluator.py (v3.3 intacto).
+  FASE 3: idéntico — las patentes llegan con jurisdicción/titular/
+  inventores en el resumen; el rubro "patente" ya estaba en su
+  vocabulario desde el día 1.
 
 7) SEGURIDAD (estado real)
   • Secrets en GitHub Secrets:
-      NTFY_TOPIC .... CREADO y PROBADO (valor NO documentado)
-      GROQ_API_KEY .. CREADO y VALIDADO
-      NTFY_TOKEN .... opcional, no creado (blindaje: topic reservado)
+      NTFY_TOPIC ......... CREADO y PROBADO (valor NO documentado)
+      GROQ_API_KEY ....... CREADO y VALIDADO
+      PATENTSVIEW_API_KEY  OPCIONAL fase 3 — crear cuando se pida la
+                           key (§13); el workflow YA lo mapea
+      LENS_API_TOKEN ..... OPCIONAL fase 3 — ídem
+      NTFY_TOKEN ......... opcional, no creado (blindaje: topic reservado)
   • GITHUB_TOKEN: automático del workflow, mapeado en el env del
     step. Permisos: contents: write + models: read.
   • ntfy.sh público: topic largo + aleatorio + jamás documentado.
@@ -185,33 +231,41 @@ Nunca más corridas.
     en el cuerpo UTF-8 (lección corrida 6, validada corrida 7).
   • Polite pool: polite_email en sources.yaml (dejar el real si ya
     está; al pegar el yaml nuevo NO pisarlo con el placeholder).
+  • Las keys de patentes NUNCA van en el código ni en el yaml:
+    solo en Secrets (R15).
   • No es asesoramiento financiero/médico: prioriza, vos decidís.
 
 8) ESTRUCTURA (real, en el repo)
 global-research-radar/
 ├─ .github/workflows/daily-ingest.yml  ← cron + botón manual +
 │                                         mapeo de secrets en env
+│                                         (fase 3: + PATENTSVIEW_API_KEY
+│                                         + LENS_API_TOKEN opcionales)
 ├─ config/sources.yaml                 ← TODO el radar se controla acá
 ├─ src/
 │  ├─ config.py          carga del YAML
-│  ├─ smoke.py           prueba de los 5 fetchers sin agente
+│  ├─ smoke.py           prueba de los 7 fetchers sin agente
 │  ├─ fetchers/          common.py (GET/POST + diagnóstico),
 │  │                     openalex.py, arxiv.py, rss_generic.py,
-│  │                     clinicaltrials.py (NUEVO v3.6),
-│  │                     openfda.py (NUEVO v3.6: 3 endpoints)
-│  ├─ pipeline/          normalize.py (ids de dominio v3.6),
-│  │                     dedup.py, caps.py (override v3.6)
+│  │                     clinicaltrials.py (fase 2),
+│  │                     openfda.py (fase 2: 3 endpoints),
+│  │                     patentsview.py (NUEVO v3.8: USPTO, key opcional),
+│  │                     lens.py (NUEVO v3.8: 100+ jurisdicciones, token
+│                     opcional)
+│  ├─ pipeline/          normalize.py (ids de dominio v3.6: nct:/fda:/
+│  │                     patent:), dedup.py, caps.py (override v3.6)
 │  ├─ agent/             evaluator.py (v3.3 TPM + reasoning aware —
-│                         INTACTO en fase 2)
+│                         INTACTO desde fase 1)
 │  └─ notify/            ntfy.py (Title RFC 2047 + header Click)
 ├─ run.py                orquestador completo + persist selectivo +
 │                          push compacto (top 5, resumen 140) + Click
+│                          (v3.8: dispatch de 7 fetchers)
 ├─ state/seen.json       memoria permanente (se commitea cada corrida;
 │                          autolimitada a 100k registros ≈ 7 meses)
 ├─ reports/              AAAA-MM-DD.md por corrida — fuente completa;
 │                          1 archivo/día, histórico en git History
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.7)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.8)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -220,6 +274,12 @@ global-research-radar/
       groq: catálogo OK (1 vez) → agente servido por Groq (modelo) →
       agente: chunk i/j → reporte escrito → ntfy: enviado → push 📱
   • La corrida tarda 15-25 min: free tier + cargas mensuales FDA.
+  • Líneas NUEVAS fase 3 (esperadas y normales):
+      rss:Patentes EN → 15 ítems ..... feed vivo (Google News)
+      rss:Patentes ES → 10 ítems ..... ídem
+      patentsview: sin PATENTSVIEW_API_KEY — skip ... normal hasta
+                     crear el secret (§13); cero requests
+      lens: sin LENS_API_TOKEN — skip .. ídem
   • Síntomas y significado exacto:
       openalex: 0 ítems ....... revisar polite_email
       rss: falló (404) ........ URL muerta → cambiar en yaml
@@ -230,6 +290,18 @@ global-research-radar/
                                 nuevas: NORMAL (404 vacío), no error
       clinicaltrials: 0 ítems . ventana sin actualizaciones fase 2-3
                                 (fines de semana): normal
+      rss:Patentes EN 0 ítems . Google News a veces achica la query
+                                when:3d: normal si ES trae ítems; si
+                                fallan los dos días seguidos, revisar
+                                la URL del feed en el yaml
+      lens 404 ................ 0 patentes en la ventana: NORMAL
+                                (doc oficial), no error
+      lens 429 ................ rate limit del plan gratis: common.py
+                                reintenta con backoff; no bajar
+                                days_back ni subir max_results
+      patentsview 400 ......... el esquema del API nuevo cambió
+                                (R11): verificar campos contra la doc
+                                y ajustar el fetcher
       HTTP 400 en openFDA ..... esquema cambió (R11): revisar campos
                                 contra 1 registro real (limit=1 sin
                                 search) y ajustar el fetcher
@@ -290,6 +362,65 @@ global-research-radar/
     • Validación local completa antes de subir: compile + unit
       tests de caps/normalize + smoke en vivo de 5 fetchers +
       mini-pipeline de 2 pasadas con regla anti-pérdida verificada.
+  FASE 3 (patentes) — sondeos 1-10 en dos sesiones (antes de escribir
+  una línea de código, igual que fase 2):
+    Sondeo 1-3 (sesión 1): Google Patents XHR responde 200 pero
+      total=0 con q=(a), q=the y fechas publication/priority/filing
+      (dentro de q y como parámetro aparte); al 5º request: 503
+      "Sorry..." — bot-guard de Google. Nunca dio UN resultado válido.
+    Sondeo 4: Espacenet 3.2 rest-services (UI de EPO): 403. Lens sin
+      token: 401 limpio ("Missing/Incorrect Authorization Header").
+      WIPO api.wipo.int/patentscope-apis: 404 "No context-path
+      matches". PatentsView nuevo: DNS inalcanzable desde el sandbox.
+    Sondeo 5-6: api.patentsview.org (el API viejo) responde 200 pero
+      con HTML de la nueva UI del "Open Data Portal" detrás de un AWS
+      WAF — el API viejo está MUERTO. Google News RSS patentes: vivo.
+    Sondeo 7-8 (sesión 2): Google XHR 503 "Sorry..." en TODAS las
+      variantes (q=(a), q=the, after=publication/priority, exp=,
+      Referer) — confirmado bot-guard de IP, no error de sintaxis.
+      Espacenet 403. WIPO: 404 también en /patentscope/ y en el
+      WSDL SOAPSearchService.
+    Sondeo 9: el cuerpo HTML de api.patentsview.org confirma: "The
+      Open Data Portal (ODP) is USPTO's data platform..." — el dominio
+      viejo fue repurposed por la USPTO.
+    Sondeo 10 + web: Justia RSS 403. Google News RSS patentes: 200
+      con 66 ítems EN / 12 ES frescos (query refinada sin ruido
+      vehicular; "Tesla patenta una piel táctil...", "Sony vende
+      patentes VR a Meta"). Lens con token basura: 401 "Unable to
+      authorize" — confirma esquema Bearer. Docs verificadas en 3
+      fuentes: PatentsView nuevo = POST /api/v1/patent/ + X-Api-Key
+      (patent_number pasó a patent_id); Lens = POST /patent/search +
+      Bearer + include=/campos + 404 = vacío. Web: el USPTO ODP exige
+      cuenta USPTO.gov + key (desde 18/6/2026 login obligatorio; keys
+      desactivadas el 8/10/2026 por perfiles incompletos).
+      PATENTSCOPE: SOAP + registro WIPO.
+  DECISIONES DE DISEÑO FASE 3:
+    • La era keyless de las patentes TERMINÓ: todo lo estructurado
+      (PATENTSCOPE, PatentsView, Lens, EPO OPS, ODP) exige cuenta+key
+      gratuita. Patrón elegido: fetcher escrito UNA vez + skip
+      silencioso sin secret → ACTIVAR = crear el secret, cero código
+      (mismo patrón que NTFY_TOKEN/GROQ_API_KEY).
+    • Columna vertebral keyless mientras tanto: Google News RSS
+      patentes EN+ES (2 líneas de yaml) — compensa como WHO News
+      compensó ICTRP.
+    • ids de dominio patent: (patentsview → patent:US<num>, lens →
+      patent:lens:<lens_id>): estables ante reindexaciones.
+    • caps.per_source_override: patentsview 25 · lens 25 (el resto
+      intacto; sin overrides el camino clásico queda byte a byte —
+      test de regresión local de nuevo).
+    • days_back 7 en ambas: el USPTO concede los martes y las
+      oficinas publican en olas semanales; la dedup cobra cada
+      concesión UNA vez.
+    • evaluador v3.3 INTACTO: el rubro "patente" ya estaba en su
+      vocabulario; el resumen de las patentes trae jurisdicción,
+      titular e inventores para separar estrategia de trámite.
+    • Validación local completa antes de pegar: compile + 6 unit
+      tests (caps override fase 3 + clásico, normalize patent:,
+      skip silencioso, mini-pipeline 2 pasadas + anti-pérdida) +
+      smoke en vivo de 7 fetchers (795 fetch: Patentes EN 15 + ES 10)
+      + mini-pipeline 1 pasada con datos vivos y seen.json real en
+      solo lectura: 695 fetch → 349 nuevos → 188 al agente, 25 de
+      patentes. seen.json NUNCA se tocó en las pruebas.
   REGLAS DEL PROYECTO (aprendidas en vivo):
     R1. Archivos Python se pegan COMPLETOS, de una sola vez
         (Ctrl+A → pegar). Nunca por fragmentos.
@@ -315,6 +446,14 @@ global-research-radar/
          evaluados = suma de chunks · persist = nuevos − evaluados ·
          chunks = techo(ítems_agente/20). Si no cierra, hay bug:
          no lo ignores.
+    R14. Endpoint no oficial (XHR de UI) que no da NI UN resultado
+         válido en sondeos = bot-guard garantizado: no entra al
+         radar (lección Google Patents XHR, Espacenet, Justia).
+    R15. Fuente con key gratis: el fetcher se escribe UNA vez y se
+         activa con el secret — jamás keys en el código ni en el
+         yaml (R2 extendida a los fetchers).
+    R16. 404 en Lens = resultado vacío (doc oficial), igual que
+         openFDA: día sin eventos, no error.
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
@@ -328,56 +467,96 @@ global-research-radar/
                        (formulario + Sharepoint): ver §13 para pedir
                        acceso; el fetcher se agrega en 1 pasada si
                        algún día hay fuente $0.
-  FASE 3 (inventos) .. ⏳ PATENTSCOPE + PatentsView + Lens
+  FASE 3 (inventos) .. ✅ CÓDIGO PEGADO (v3.8) — CORRIDA 13 PENDIENTE
+                       (prueba de fase, botón manual). Keyless vivo
+                       hoy: Google News patentes EN+ES. PatentsView +
+                       Lens: fetchers escritos y mapeados en el
+                       workflow — se activan AL CREAR los secrets
+                       PATENTSVIEW_API_KEY / LENS_API_TOKEN (§13).
+                       PATENTSCOPE ⚠️ gateado (SOAP + registro WIPO).
+                       Cuando las keys lleguen, la corrida siguiente
+                       las activa sola y esa corrida se lee con lupa
+                       (R11: primera vez contra las APIs reales).
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST v3.7
+12) CHECKLIST v3.8
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.7)
+[x] Manual actualizado (este archivo, v3.8)
 [x] Secret NTFY_TOPIC creado y probado (push OK; valor no documentado)
 [x] Workflow permissions: read and write
-[x] Código fase 1 completo (15 archivos) — corrida 11 verde
+[x] Código fase 1 completo — corrida 11 verde
 [x] Secret GROQ_API_KEY creado y validado
 [x] GITHUB_TOKEN mapeado en env del workflow
-[x] Agente v3.3 validado (corridas 7 y 11) — INTACTO en fase 2
+[x] Agente v3.3 validado (corridas 7 y 11) — INTACTO en fases 2 y 3
 [x] ntfy.py: Title RFC 2047 + header Click — validado en teléfono
 [x] Push compacto anti-corte (top 5, 140 chars) — verificado
-[x] Regla anti-pérdida validada en 4 corridas + test local fase 2
-[x] FASE 2: fetchers clinicaltrials.py + openfda.py escritos y
-    calibrados con 8 sondeos en vivo (sin coste: APIs públicas $0)
-[x] FASE 2: ids de dominio nct:/fda: en normalize (retrocompatible)
-[x] FASE 2: caps.per_source_override (biosalud 25, resto 50 intacto)
-[x] FASE 2: WHO News RSS con max_items (feed pesado controlado)
-[x] FASE 2: validación local verde — compile + unit tests + smoke
-    en vivo (670 fetch → 270 al agente, distribución correcta) +
-    mini-pipeline 2 pasadas (dedup + anti-pérdida OK)
-[x] Dudas de archivado resueltas: cron 1x/día no pisa nada;
-    git History preserva TODO
-[x] Pegar los 9 archivos en GitHub y corrida 12 manual: VERDE a la
-    primera — todos los checks del README-pegado OK (WHO News 12,
-    openfda 213, caps override biosalud 25x4, 670 fetch, 7 chunks)
-[ ] Semana de observación (corridas 13-19 en automático): cada día
-    mirar UNA línea del log — "persist: N ítems sin veredicto".
-    Protocolo de decisión:
+[x] Regla anti-pérdida validada en 4 corridas + tests locales 2 y 3
+[x] FASE 2: fetchers clinicaltrials.py + openfda.py calibrados con
+    8 sondeos en vivo — corrida 12 verde a la primera
+[x] FASE 2: ids de dominio nct:/fda: + caps.per_source_override
+[x] FASE 3: 10 sondeos en vivo documentados (Google XHR bot-guard,
+    Espacenet/Justia 403, PatentsView viejo muerto, Lens 401/404-doc,
+    ODP con cuenta, PATENTSCOPE SOAP)
+[x] FASE 3: fetchers patentsview.py + lens.py escritos (key opcional
+    por secret, patrón NTFY_TOKEN) + skip silencioso verificado
+[x] FASE 3: Google News patentes EN/ES en sources.yaml (keyless vivo,
+    15+10 ítems verificados en smoke)
+[x] FASE 3: ids patent: + caps override patentsview/lens 25
+[x] FASE 3: workflow mapea PATENTSVIEW_API_KEY y LENS_API_TOKEN
+[x] FASE 3: validación local verde — compile + 6 unit tests + smoke
+    en vivo (795 fetch) + e2e con seen.json real en solo lectura
+    (695 → 349 nuevos → 188 al agente, 25 de patentes)
+[ ] CORRIDA 13 (prueba de fase 3, botón manual): mirar estas líneas —
+    · rss:Patentes EN → ~15 y rss:Patentes ES → ~10
+    · patentsview: sin PATENTSVIEW_API_KEY — skip (normal)
+    · lens: sin LENS_API_TOKEN — skip (normal)
+    · caps: override incluye patentsview 25 · lens 25
+    · R13: evaluados = suma de chunks · persist = nuevos − evaluados
+[ ] Semana de observación (corridas 13-19): cada día mirar UNA línea
+    — "persist: N ítems sin veredicto". Protocolo:
     · persist N se achica o estable → todo bien, no tocar NADA
     · persist N crece 3+ días seguidos → el pool se ahoga: bajar
-      per_source en sources.yaml o subir threshold de corte
+      per_source en sources.yaml o subir threshold
     · arxiv 429 dos días seguidos → sources.yaml: arxiv
       days_back: 2 → 4 (seguro gratis: dedup absorbe duplicados)
-    · día 2 con números inflados o raros → NO tocar: el día 1
-      biosalud vino con ventanas históricas completas, la dedup
-      acomoda solo en 2-3 días
+    · rss Patentes EN/ES caídos 2 días seguidos → revisar URL del
+      feed (Google News a veces recicla la query)
 [ ] Ajuste fino threshold/caps SOLO con datos reales de la semana
     13-19 (nunca a ojo después de una sola corrida)
-[ ] Fase 3 (inventos): PATENTSCOPE + PatentsView + Lens
-[ ] (opcional) WHO ICTRP: llenar el formulario de WHO para pedir
-    acceso al Sharepoint de records nuevos/actualizados (gratis,
-    manual); si llega el acceso, fetcher en 1 pasada
+[ ] (opcional pero recomendado) Pedir las 2 keys gratis de fase 3
+    (§13): PATENTSVIEW_API_KEY y LENS_API_TOKEN → crear los secrets
+    con EXACTOS esos nombres → la fuente se activa sola
+[ ] (opcional) WHO ICTRP: formulario de WHO para el Sharepoint
+[ ] (opcional) PATENTSCOPE: pedir WSUser/WSKey (SOAP) — si llegan,
+    fetcher en 1 pasada
 [ ] (opcional) Retención 180 días de reports/ (ver §13, snippet listo)
 [ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
 
 13) EXTRAS LISTOS PARA ACTIVAR (fases futuras)
+  KEYS DE PATENTES — fase 3 completa (gratis, ~10 min c/u):
+    1) PatentsView (USPTO, concesiones):
+       https://patentsview-support.atlassian.net/servicedesk/
+       customer/portals → pedir API key (llega al email) →
+       GitHub → Settings → Secrets and variables → Actions →
+       New repository secret → nombre EXACTO: PATENTSVIEW_API_KEY.
+       La próxima corrida la activa sola (el log deja de decir
+       "skip" y aparece "patentsview: N ítems").
+    2) Lens.org (100+ jurisdicciones):
+       cuenta gratis en lens.org → perfil → API tokens → pedir
+       acceso al Patent API (uso no comercial; la aprobación es
+       manual y puede tardar días) → crear token → secret
+       LENS_API_TOKEN (nombre EXACTO). Ídem: se activa sola.
+    3) WIPO PATENTSCOPE (SOAP): pedir WSUser/WSKey por el formulario
+       de PATENTSCOPE Web Services (gratis, hay que aceptar términos).
+       Con credenciales, avisar: el fetcher SOAP se pega en 1 pasada
+       (diseño anotado: POST XML a patentscope.wipo.int, filtros por
+       International Publication Date).
+    4) USPTO ODP (reserva, no hace falta si PatentsView anda):
+       cuenta USPTO.gov + MFA → Open Data Portal → Manage API Key →
+       Activate.
+    NOTA: al crear un secret NO se toca código: el workflow ya mapea
+    PATENTSVIEW_API_KEY y LENS_API_TOKEN desde v3.8.
   WHO ICTRP — pedir acceso (opcional, manual, gratis):
     https://www.who.int/tools/clinical-trials-registry-platform
     → "Fill this form to request access to the Sharepoint folder for
@@ -413,5 +592,11 @@ global-research-radar/
   topic → crear access token → secret NTFY_TOKEN (ntfy.py ya lo
   soporta: si el secret existe, agrega Authorization Bearer).
 
-Día cerrado. Balance: FASE 2 pegada, corrida 12 verde a la primera, manual v3.7 con el protocolo de observación y la regla R13. Mañana solo me pegás el log de la corrida 13 y miramos una línea: si persist baja de 234. Buen trabajo — el radar ya bucea biosalud solo.
-NOMBRE DEL REPO: global-research-radar
+Día cerrado. Balance: FASE 3 pegada completa — 10 sondeos en vivo
+dijeron la verdad (la era keyless de las patentes terminó: todo lo
+estructurado hoy pide key gratis), así que el radar sale con Google
+News patentes EN+ES vivas HOY y PatentsView + Lens dormidos dentro
+del repo esperando sus secrets: activar = crear el secret, cero
+código. La corrida 13 (botón manual) es la prueba de fase: mirar 5
+líneas del log según el checklist. Buen trabajo — el radar ya bucea
+inventos también.
