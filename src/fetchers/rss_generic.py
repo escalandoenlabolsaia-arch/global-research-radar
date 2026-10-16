@@ -1,5 +1,7 @@
 """Fetcher RSS genérico — cualquier instituto/revista = 1 línea en sources.yaml.
 Un feed caído NUNCA frena la corrida: se loguea y se sigue.
+v3.6: max_items opcional por feed (p.ej. WHO News publica un histórico
+gigante; max_items: 12 toma solo las 12 entradas listadas primero).
 """
 import logging
 import re
@@ -38,8 +40,10 @@ def fetch(cfg):
         try:
             resp = get(url, timeout=30)
             feed = feedparser.parse(resp.content)
+            max_items = int(f.get("max_items", 0) or 0)
+            entradas = feed.entries[:max_items] if max_items > 0 else feed.entries
             n = 0
-            for e in feed.entries:
+            for e in entradas:
                 title = " ".join((e.get("title") or "").split())
                 if not title:
                     continue
