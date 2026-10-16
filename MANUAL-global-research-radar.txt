@@ -600,3 +600,13 @@ del repo esperando sus secrets: activar = crear el secret, cero
 código. La corrida 13 (botón manual) es la prueba de fase: mirar 5
 líneas del log según el checklist. Buen trabajo — el radar ya bucea
 inventos también.
+
+CREAR LOS SECRETS (OPCIONAL — puede hacerse DESPUÉS, cuando pidas las
+keys): Settings → Secrets and variables → Actions → New repository
+secret. Nombres EXACTOS:
+  PATENTSVIEW_API_KEY   (key gratis: patentsview-support.atlassian.net
+                         /servicedesk/customer/portals)
+  LENS_API_TOKEN        (token gratis no comercial: lens.org → perfil
+                         → API tokens → pedir acceso al Patent API)
+NO hace falta tocar código ni workflow cuando los crees: ya está
+mapeado. La corrida siguiente los activa sola.
