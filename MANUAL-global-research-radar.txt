@@ -610,3 +610,24 @@ secret. Nombres EXACTOS:
                          → API tokens → pedir acceso al Patent API)
 NO hace falta tocar código ni workflow cuando los crees: ya está
 mapeado. La corrida siguiente los activa sola.
+Los pasos concretos
+
+Paso 1 — Conseguir las keys (lo único que lleva tiempo):
+
+SECRET
+DE DÓNDE SALE LA KEY
+PATENTSVIEW_API_KEY	Entrás a patentsview-support.atlassian.net/servicedesk/customer/portals → pedís una API key gratis → te la mandan por mail
+LENS_API_TOKEN	Creás cuenta gratis en lens.org → avatar (arriba a la derecha) → API tokens → pedís acceso al Patent API (uso no comercial) → te dan el token
+ 
+Lens revisa el pedido a mano, puede tardar 1-3 días. PatentsView suele ser más rápido. Por eso es "OPCIONAL / DESPUÉS": no bloquea nada.
+
+Paso 2 — Cargarlas en GitHub (2 min, cuando las tengas):
+
+Abrí tu repo en github.com
+Pestaña Settings (arriba) → menú izquierdo → Secrets and variables → Actions
+Botón verde New repository secret
+En Name: PATENTSVIEW_API_KEY ← exactamente así, mayúsculas y guión bajo, sin espacios
+En Secret: pegás la key → Add secret
+Repetís: LENS_API_TOKEN + el token de Lens
+Ojo con el Name: tiene que ser idéntico al de la tabla. Si escribís patentsview_api_key en minúsculas, el workflow no lo encuentra.
+
