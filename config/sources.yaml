@@ -5,7 +5,7 @@
 # =========================================================
 
 # Email para polite pool de OpenAlex/Crossref (mejora rate limits)
-polite_email: "TU_EMAIL@ejemplo.com"   # ← REEMPLAZAR por tu email real
+polite_email: "escalandoenlabolsaia@gmail.com"   # ← REEMPLAZAR por tu email real
 
 caps:
   per_source: 50      # máx ítems por fuente por corrida
