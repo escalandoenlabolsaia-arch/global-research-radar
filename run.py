@@ -1,6 +1,7 @@
 """Pipeline completo: FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST
 → NTFY → PERSIST. Punto de entrada del workflow y de pruebas manuales.
 v3.4: push compacto (top 5, resumen 140 chars) + header Click al informe.
+v3.6: fuentes Fase 2 (biosalud) — clinicaltrials + openfda en el dispatch.
 """
 import logging
 import os
@@ -10,7 +11,7 @@ from datetime import date
 from pathlib import Path
 
 from src.config import load
-from src.fetchers import openalex, arxiv, rss_generic
+from src.fetchers import openalex, arxiv, rss_generic, clinicaltrials, openfda
 from src.pipeline import normalize, dedup, caps
 from src.agent import evaluator
 from src.notify import ntfy
@@ -59,7 +60,9 @@ def main() -> int:
     # 1. FETCH — una fuente caída no frena la corrida
     raw = []
     for nombre, mod in [("openalex", openalex), ("arxiv", arxiv),
-                        ("rss", rss_generic)]:
+                        ("rss", rss_generic),
+                        ("clinicaltrials", clinicaltrials),
+                        ("openfda", openfda)]:
         try:
             raw += mod.fetch(cfg)
         except Exception as e:
