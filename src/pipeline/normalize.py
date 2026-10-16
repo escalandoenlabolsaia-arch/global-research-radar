@@ -1,4 +1,9 @@
-"""Normalización — un esquema único + id estable para todo el radar."""
+"""Normalización — un esquema único + id estable para todo el radar.
+v3.6: si la fuente trae un id de dominio propio (nct:/fda:/ictrp:), se
+respeta: es estable aunque el título cambie (p.ej. un ensayo que se
+actualiza o una app FDA con marca nueva). Retrocompatible: los fetchers
+anteriores no seteaban id, así que su comportamiento no cambia.
+"""
 import hashlib
 import re
 import unicodedata
@@ -20,7 +25,10 @@ def normalize_title(title: str) -> str:
 
 
 def item_id(item: dict) -> str:
-    """DOI si hay; si no, SHA256 del título normalizado (regla del manual §6)."""
+    """Id de dominio (si la fuente lo trae) > DOI > SHA256 del título
+    normalizado (regla del manual §6)."""
+    if item.get("id"):
+        return item["id"]
     if item.get("doi"):
         return f"doi:{item['doi'].lower()}"
     nt = normalize_title(item.get("title", ""))
