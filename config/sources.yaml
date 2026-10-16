@@ -1,6 +1,7 @@
 # =========================================================
 # config/sources.yaml — TODO el radar se controla desde acá
-# v3 · fase 1 (OpenAlex + arXiv + RSS genérico)
+# v3.6 · fase 2 (OpenAlex + arXiv + RSS + ClinicalTrials.gov
+#        + openFDA). WHO ICTRP: gateado (ver manual §10).
 # =========================================================
 
 # Email para polite pool de OpenAlex/Crossref (mejora rate limits)
@@ -9,6 +10,12 @@ polite_email: "TU_EMAIL@ejemplo.com"   # ← REEMPLAZAR por tu email real
 caps:
   per_source: 50      # máx ítems por fuente por corrida
   total: 300          # máx ítems que llegan al agente
+  # Fase 2: cupo propio para las fuentes biosalud (el resto queda en 50)
+  per_source_override:
+    clinicaltrials: 25
+    openfda-farmacos: 25
+    openfda-510k: 25
+    openfda-pma: 25
 
 threshold: 70         # nota mínima 0-100 para entrar al informe
 
@@ -32,12 +39,33 @@ arxiv:
 
 rss:
   # Un feed nuevo = 1 línea. Cualquier URL caída se loguea y NO rompe la corrida.
+  # max_items (opcional) limita las entradas tomadas de un feed pesado.
   feeds:
     - { name: "Nature",           url: "https://www.nature.com/nature.rss",               lang: en }
     - { name: "Science",          url: "https://www.science.org/rss/news_current.xml",    lang: en }
     - { name: "Phys.org",         url: "https://phys.org/rss-feed/",                      lang: en }
     - { name: "Ars Technica",     url: "https://feeds.arstechnica.com/arstechnica/index", lang: en }
     - { name: "MIT Tech Review",  url: "https://www.technologyreview.com/feed/",          lang: en }
+    # Fase 2 (biosalud): anuncios oficiales de la OMS (brotes, precalificación
+    # de medicamentos, emergencias sanitarias). max_items: el feed trae historia.
+    - { name: "WHO News",         url: "https://www.who.int/rss-feeds/news-english.xml",  lang: en, max_items: 12 }
+
+# ---------------- FASE 2 (biosalud) ----------------
+clinicaltrials:
+  days_back: 2              # ventana de estudios actualizados
+  phases: [PHASE2, PHASE3]  # fases que interesan ([] = todas)
+  max_results: 100          # pageSize del único request por corrida
+
+openfda:
+  farmacos:                 # drug/drugsfda — aprobaciones ORIG (AP)
+    days_back: 15           # el dataset tiene ~1 semana de lag de
+    limit: 100              # publicación (verificado 17/10: corte ~9-12/10)
+  dispositivos_510k:        # device/510k — autorizaciones 510(k)
+    days_back: 35           # el dataset carga ~1x/mes: ventana ancha,
+    limit: 100              # la dedup hace que cada decisión entre 1 vez
+  dispositivos_pma:         # device/pma — aprobaciones PMA
+    days_back: 35
+    limit: 100
 
 agent:
   # Vacío = auto-descubre el mejor modelo disponible en cada corrida.
