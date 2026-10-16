@@ -2,6 +2,8 @@
 → NTFY → PERSIST. Punto de entrada del workflow y de pruebas manuales.
 v3.4: push compacto (top 5, resumen 140 chars) + header Click al informe.
 v3.6: fuentes Fase 2 (biosalud) — clinicaltrials + openfda en el dispatch.
+v3.8: fuentes Fase 3 (patentes) — patentsview + lens en el dispatch
+(salta solos si no existen los secrets; Google News patentes vía rss).
 """
 import logging
 import os
@@ -11,7 +13,8 @@ from datetime import date
 from pathlib import Path
 
 from src.config import load
-from src.fetchers import openalex, arxiv, rss_generic, clinicaltrials, openfda
+from src.fetchers import (openalex, arxiv, rss_generic, clinicaltrials,
+                          openfda, patentsview, lens)
 from src.pipeline import normalize, dedup, caps
 from src.agent import evaluator
 from src.notify import ntfy
@@ -62,7 +65,9 @@ def main() -> int:
     for nombre, mod in [("openalex", openalex), ("arxiv", arxiv),
                         ("rss", rss_generic),
                         ("clinicaltrials", clinicaltrials),
-                        ("openfda", openfda)]:
+                        ("openfda", openfda),
+                        ("patentsview", patentsview),
+                        ("lens", lens)]:
         try:
             raw += mod.fetch(cfg)
         except Exception as e:
