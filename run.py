@@ -4,6 +4,8 @@ v3.4: push compacto (top 5, resumen 140 chars) + header Click al informe.
 v3.6: fuentes Fase 2 (biosalud) — clinicaltrials + openfda en el dispatch.
 v3.8: fuentes Fase 3 (patentes) — patentsview + lens en el dispatch
 (salta solos si no existen los secrets; Google News patentes vía rss).
+v3.9: + epo_ops (EPO OPS, publicaciones EP+WO) en el dispatch — skip
+silencioso hasta crear los secrets OPS_CONSUMER_KEY/OPS_CONSUMER_SECRET.
 """
 import logging
 import os
@@ -14,7 +16,7 @@ from pathlib import Path
 
 from src.config import load
 from src.fetchers import (openalex, arxiv, rss_generic, clinicaltrials,
-                          openfda, patentsview, lens)
+                          openfda, patentsview, lens, epo_ops)
 from src.pipeline import normalize, dedup, caps
 from src.agent import evaluator
 from src.notify import ntfy
@@ -67,7 +69,8 @@ def main() -> int:
                         ("clinicaltrials", clinicaltrials),
                         ("openfda", openfda),
                         ("patentsview", patentsview),
-                        ("lens", lens)]:
+                        ("lens", lens),
+                        ("epo_ops", epo_ops)]:
         try:
             raw += mod.fetch(cfg)
         except Exception as e:
