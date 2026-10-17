@@ -1,8 +1,10 @@
 # =========================================================
 # config/sources.yaml — TODO el radar se controla desde acá
-# v3.8 · fase 3 (patentes): Google News patentes (keyless) +
-#        patentsview + lens (se activan con secrets, manual §13).
-#        PATENTSCOPE: gateado (SOAP + registro WIPO, ver §10).
+# v3.9 · fase 3 (patentes): Google News patentes (keyless, en
+#        producción) + patentsview + lens + epo_ops (los tres se
+#        activan con secrets, manual §13; lens descartada sin mail
+#        académico y patentsview congelada por la migración ODP).
+#        PATENTSCOPE: sin API pública (verificado, §10).
 # =========================================================
 
 # Email para polite pool de OpenAlex/Crossref (mejora rate limits)
@@ -20,6 +22,7 @@ caps:
     openfda-pma: 25
     patentsview: 25
     lens: 25
+    epo_ops: 25
 
 threshold: 70         # nota mínima 0-100 para entrar al informe
 
@@ -53,9 +56,9 @@ rss:
     # Fase 2 (biosalud): anuncios oficiales de la OMS (brotes, precalificación
     # de medicamentos, emergencias sanitarias). max_items: el feed trae historia.
     - { name: "WHO News",         url: "https://www.who.int/rss-feeds/news-english.xml",  lang: en, max_items: 12 }
-    # Fase 3 (patentes): Google News RSS = la única vía keyless viva para
-    # patentes hoy (sondeo 10: 66 ítems en / 12 es en 3 días). Query
-    # refinada sin ruido vehicular; max_items controla el peso.
+    # Fase 3 (patentes): Google News RSS = la columna vertebral keyless en
+    # producción (corrida 13: 15 + 10 ítems reales). Query refinada sin
+    # ruido vehicular; max_items controla el peso.
     - { name: "Patentes EN",      url: "https://news.google.com/rss/search?q=%22patent%20granted%22%20OR%20%22patent%20issued%22%20OR%20%22patent%20application%22%20OR%20%22patents%22%20when%3A3d&hl=en&gl=US&ceid=US:en", lang: en, max_items: 15 }
     - { name: "Patentes ES",      url: "https://news.google.com/rss/search?q=patente%20concedida%20OR%20%22nueva%20patente%22%20OR%20patenta%20when%3A3d&hl=es&gl=AR&ceid=AR:es", lang: es, max_items: 10 }
 
@@ -77,17 +80,23 @@ openfda:
     limit: 100
 
 # ---------------- FASE 3 (patentes / inventos) ----------------
-# patentsview y lens NO hacen requests hasta que existan sus secrets
-# (PATENTSVIEW_API_KEY / LENS_API_TOKEN): sin secret = skip silencioso.
-patentsview:                # USPTO — concesiones (API nuevo, X-Api-Key)
-  days_back: 7              # el USPTO concede los martes: ventana semanal
-  max_results: 100
-  # enabled: false           # válvula de emergencia (como openfda)
+# patentsview, lens y epo_ops NO hacen requests hasta que existan sus
+# secrets (PATENTSVIEW_API_KEY / LENS_API_TOKEN / OPS_CONSUMER_KEY +
+# OPS_CONSUMER_SECRET): sin secret = skip silencioso.
+patentsview:                # USPTO — CONGELADA: el portal de keys está
+  days_back: 7              # cerrado por la migración al Open Data Portal
+  max_results: 100          # (sin ETA, ver §10); el fetcher queda dormido
+  # enabled: false          # y se recalibra cuando USPTO rearme su API
 
-lens:                       # 100+ jurisdicciones — publicación global
-  days_back: 7              # las oficinas publican en olas semanales
-  max_results: 100
-  # enabled: false
+lens:                       # DESCARTADA sin mail académico: la gratuita
+  days_back: 7              # permanente exige cuenta Académica (verificado
+  max_results: 100          # en el registro 17/10); queda dormida por si
+  # enabled: false          # algún día cambia el acceso
+
+epo_ops:                    # EPO OPS — publicaciones EP + WO (PCT): el
+  days_back: 2              # pipeline internacional de invención. 2
+  max_results: 100          # requests/corrida: sondeo del total + página
+  # enabled: false          # ALEATORIA (anti-sesgo de orden del índice).
 
 agent:
   # Vacío = auto-descubre el mejor modelo disponible en cada corrida.
