@@ -1,6 +1,7 @@
 =====================================================================
-MANUAL — GLOBAL-RESEARCH-RADAR  (v3.9 · FASE 3 EN PRODUCCIÓN —
-CORRIDA 13 VERDE · EPO OPS PEGADA, ACTIVACIÓN PENDIENTE)
+MANUAL — GLOBAL-RESEARCH-RADAR  (v3.10 · FASE 3 EN PRODUCCIÓN —
+CORRIDAS 13 Y 14 VERDES · MEMORIA ENCADENA EXACTA ENTRE CORRIDAS ·
+EPO OPS PEGADA, ACTIVACIÓN PENDIENTE)
 Monitoreo global de todo lo público que se investiga, descubre,
 patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -39,16 +40,17 @@ exacto este sistema la capta. Cobertura: el universo observable.
   ✅ RSS genérico ..... 8 feeds vivos: Nature (75), Phys.org (30),
                        Ars Technica (20), Science (10), MIT TR (10),
                        WHO News (12, max_items), Patentes EN (15) y
-                       Patentes ES (10) — EN PRODUCCIÓN (corrida 13:
-                       15+10 ítems reales). 1 feed nuevo = 1 línea
+                       Patentes ES (10) — EN PRODUCCIÓN (corridas 13
+                       y 14: 15+10 ítems reales, estable). 1 feed
+                       nuevo = 1 línea
                        en sources.yaml. max_items (opcional) recorta
                        feeds pesados.
   ⏳ EurekAlert! · CERN · Max Planck · CNRS · RIKEN · CAS · CSIC ·
      CONICET · ICGEB · EMBO · IEEE · ACS · RSC
 
-  D. PATENTES (100+ oficinas) ✅ EN PRODUCCIÓN — corrida 13 VERDE
+  D. PATENTES (100+ oficinas) ✅ EN PRODUCCIÓN — c13 y c14 VERDES
   ✅ Google News RSS patentes (2 feeds, keyless, EN PRODUCCIÓN:
-                       corrida 13 real 15 EN + 10 ES). Columna
+                       15 EN + 10 ES en AMBAS corridas). Columna
                        vertebral de patentes mientras se activan las
                        fuentes con key. Compensa como WHO News
                        compensó a ICTRP: $0, 2 líneas de yaml.
@@ -132,11 +134,13 @@ exacto este sistema la capta. Cobertura: el universo observable.
   países de los sites en el resumen y las patentes traen jurisdicción
   y titulares → región acertada.
 
-4) PIPELINE DIARIO (validado en 13 corridas reales — la corrida 13,
-   primera de fase 3, salió verde a la primera: 795 fetch → 348
-   nuevos → 187 al agente → 161 evaluados → persist 187; 4 chunks
-   truncados, el regex de rescate salvó todo lo parseable y los 26
-   faltantes reintentan al día siguiente — R5)
+4) PIPELINE DIARIO (validado en 14 corridas reales — la 13, primera
+   de fase 3, salió verde a la primera: 795 fetch → 348 nuevos →
+   187 al agente → 161 evaluados → persist 187; la 14 repitió verde
+   con el backlog bajando: 795 fetch → 218 nuevos → 122 al agente →
+   102 evaluados → persist 116; 3 chunks truncados, el rescate salvó
+   los 40 objetos completos y los 20 faltantes reintentan — R5.
+   BONUS c14: la memoria encadenó exacta entre corridas, ver R13)
 FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
   • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
     daily-ingest → Run workflow. Duración típica: 15-25 min.
@@ -209,7 +213,7 @@ Nunca más corridas.
   rutinario).
   PROVEEDORES (en orden, ambos $0):
     1. Groq ........ GROQ_API_KEY — PRIMARIO (100% de los chunks en
-                     las corridas 7, 11 y 13 con gpt-oss-120b).
+                     las corridas 7, 11, 13 y 14 con gpt-oss-120b).
     2. GitHub Models  GITHUB_TOKEN del workflow (models: read) —
                      FALLBACK. Su /catalog no siempre responde desde
                      runners → intenta a ciegas openai/gpt-4.1-mini y
@@ -224,7 +228,7 @@ Nunca más corridas.
     • Free tier Groq: 8.000 tokens/minuto POR MODELO.
     • CHUNK = 20 ítems/llamada (~2.5k tokens) — nunca más grande.
     • Resumen en payload recortado a 200 chars, título a 150.
-    • Pausa 50s entre chunks: cero 429 en corridas 7, 11 y 13.
+    • Pausa 50s entre chunks: cero 429 en corridas 7, 11, 13 y 14.
     • Ante 429: espera 65s y reintenta ×3.
     • Cascada: hasta 3 modelos de Groq por chunk.
     • max_tokens salida: 4000.
@@ -233,9 +237,9 @@ Nunca más corridas.
       + max_tokens 4000 + resumen_es limitado a 25 palabras.
   JSON (defensa en profundidad):
     • Prompt prohíbe markdown y ```. Parseo tolerante a fences.
-    • Array truncado → regex de rescate: en la corrida 13 salvó
-      TODO lo parseable (12/12, 15/15, 8/8, 19/19) y los ítems
-      faltantes reintentaron al día siguiente (R5).
+    • Array truncado → regex de rescate: salvó TODO lo parseable
+      en las dos corridas de fase 3 (c13: 12/12, 15/15, 8/8, 19/19 ·
+      c14: 12/12, 9/9, 19/19) y los faltantes reintentan (R5).
   SALIDA: SIEMPRE español. Por ítem: score 0-100 + rubro + región +
   resumen_es. Rubros: investigacion | preprint | descubrimiento |
   patente | salud | tech | financiamiento | otro
@@ -310,7 +314,7 @@ global-research-radar/
 ├─ reports/              AAAA-MM-DD.md por corrida — fuente completa;
 │                          1 archivo/día, histórico en git History
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.9)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.10)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -322,7 +326,7 @@ global-research-radar/
   • Líneas NUEVAS v3.9 (esperadas y normales):
       epo_ops: sin OPS_CONSUMER_KEY/OPS_CONSUMER_SECRET — skip ..
                  normal hasta crear los secrets (§13); cero requests
-  • Líneas de corrida 13 (verificadas en producción):
+  • Líneas de fase 3 (verificadas en producción, corridas 13-14):
       rss:Patentes EN → 15 ítems ..... feed vivo (Google News)
       rss:Patentes ES → 10 ítems ..... ídem
       patentsview: sin PATENTSVIEW_API_KEY — skip ... normal
@@ -330,6 +334,8 @@ global-research-radar/
       caps: override={'clinicaltrials': 25, ..., 'patentsview': 25,
             'lens': 25, 'epo_ops': 25} ....... válvulas montadas
       "JSON truncado — salvé N/M objetos" ... rescate funcionando
+      caps: ... fuentes=11 (de 14 con ítems) 3 fuentes sin nuevos
+        ese día (feeds chicos ya vistos): normal, no tocar
   • Cuando OPS se active, estas son sus líneas:
       epo_ops: N ítems (página X-Y de Z en AAAAMMDD → AAAAMMDD) ..
         FUENTE ACTIVA. X-Y debe cambiar entre corridas (sampling
@@ -491,6 +497,16 @@ global-research-radar/
       persist 187 = 348−161), ntfy 1390 bytes, 4 chunks truncados
       con rescate completo de lo parseable. Baseline de observación:
       persist 187 < 234 (corrida 12) → el pool empieza ABAJO.
+    Corrida 14 (real, producción): VERDE — 795 fetch otra vez
+      (mismas fuentes, cero ruido), 218 nuevos (−130: la dedup cobra
+      y se agota el backlog del arranque), 122 al agente, 102
+      evaluados (R13 exacto: 12+9+20+19+20+20+2; chunk 7 = 122−120
+      = 2), persist 116 = 96 cortados por caps + 20 de truncado.
+      Pool: 234 → 187 → 116 (−71 en un día). HALLAZGO c14: la línea
+      "memoria: 1039" implica estado previo 821, y 1008 − 187 = 821
+      EXACTO → seen.json se commitea y recarga sin perder NI UN
+      registro: la persistencia entre corridas quedó verificada en
+      producción, no solo en tests.
     Sondeo 11 (web): PatentsView CONGELADA A PROPÓSITO — la
       transition-guide oficial de USPTO confirma: migración de
       PatentsView al Open Data Portal (arrancó 20/3/2026), Service
@@ -563,10 +579,12 @@ global-research-radar/
     R12. Los datasets regulatorios tienen lag (drugsfda ~1 semana,
          510k/PMA ~1 mes): ventanas anchas + dedup, nunca rastrear
          "lo nuevo de hoy" en fuentes que no lo tienen.
-    R13. El log debe cerrar aritmético (validado en corrida 12 y 13):
+    R13. El log debe cerrar aritmético (validado en corridas 12-14):
          evaluados = suma de chunks · persist = nuevos − evaluados ·
-         chunks = techo(ítems_agente/20). Si no cierra, hay bug:
-         no lo ignores.
+         chunks = techo(ítems_agente/20) · y la memoria ENCADENA
+         corridas: memoria_hoy − nuevos_hoy = memoria_ayer −
+         persist_ayer (c13→c14: 1039−218 = 821 = 1008−187). Si no
+         cierra, hay bug: no lo ignores.
     R14. Endpoint no oficial (XHR de UI) que no da NI UN resultado
          válido en sondeos = bot-guard garantizado: no entra al
          radar (lección Google Patents XHR, Espacenet, Justia).
@@ -592,10 +610,12 @@ global-research-radar/
                        (formulario + Sharepoint): ver §13 para pedir
                        acceso; el fetcher se agrega en 1 pasada si
                        algún día hay fuente $0.
-  FASE 3 (inventos) .. ✅ EN PRODUCCIÓN — corrida 13 VERDE a la
-                       primera (2026-10-16: 795 fetch → 348 nuevos →
-                       187 al agente → 161 evaluados; R13 cerró
-                       exacto). Keyless vivo: Google News patentes
+  FASE 3 (inventos) .. ✅ EN PRODUCCIÓN — corridas 13 y 14 VERDES
+                       (13: 2026-10-16, 795 → 348 → 187 → 161 ·
+                       14: 2026-10-17, 795 → 218 → 122 → 102 con
+                       persist 116 y bajando; R13 exacto en ambas,
+                       memoria encadenada perfecta). Keyless vivo:
+                       Google News patentes
                        EN+ES. v3.9: + EPO OPS PEGADA Y VALIDADA —
                        activación PENDIENTE de la cuenta EPO
                        (secrets OPS_CONSUMER_KEY + OPS_CONSUMER_
@@ -609,9 +629,9 @@ global-research-radar/
   FASE 4 (predicción)  ⏳ RePORTER + NSF + CORDIS
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST v3.9
+12) CHECKLIST (actualizado v3.10)
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.9)
+[x] Manual actualizado (este archivo, v3.10)
 [x] Secret NTFY_TOPIC creado y probado (push OK; valor no documentado)
 [x] Workflow permissions: read and write
 [x] Código fase 1 completo — corrida 11 verde
@@ -636,6 +656,11 @@ global-research-radar/
     + ES 10 reales, caps override visible en el log, R13 cerró exacto
     (12+15+20+20+20+20+20+8+19+7 = 161; persist 187 = 348−161),
     ntfy 1390 bytes OK; los 26 truncados reintentaron (R5)
+[x] CORRIDA 14: VERDE — 795 fetch, 218 nuevos, 122 al agente, 102
+    evaluados (12+9+20+19+20+20+2; persist 116 = 218−102), memoria
+    encadenó exacta entre corridas (821 = 1008−187 = 1039−218),
+    ntfy 1296 bytes OK; 20 truncados reintentan (R5); pool
+    234→187→116
 [x] Sondeos 11-13: PatentsView congelada por USPTO (ODP sin fecha),
     Lens descartada sin mail académico (verificado en su registro),
     PATENTSCOPE sin API pública, EPO OPS viva y de registro abierto
@@ -661,6 +686,7 @@ global-research-radar/
 [ ] Semana de observación (corridas 13-19): cada día mirar UNA línea
     — "persist: N ítems sin veredicto". Protocolo:
     · arranque: corrida 13 = 187 < 234 baseline → empezar abajo
+    · corrida 14 = 116 (−71) → bajando como debe: no tocar NADA
     · persist N se achica o estable → todo bien, no tocar NADA
     · persist N crece 3+ días seguidos → el pool se ahoga: bajar
       per_source en sources.yaml o subir threshold
@@ -750,15 +776,18 @@ global-research-radar/
   topic → crear access token → secret NTFY_TOKEN (ntfy.py ya lo
   soporta: si el secret existe, agrega Authorization Bearer).
 
-Día cerrado. Balance v3.9: FASE 3 EN PRODUCCIÓN — la corrida 13 salió
-verde a la primera (795 fetch, R13 cerró exacto, el rescate JSON
-cumplió y los 26 truncados reintentaron). El ecosistema de patentes
-se reordenó con la realidad en la mano: PatentsView congelada por la
-propia USPTO (sin fecha), Lens descartada por su muro académico,
-PATENTSCOPE sin API pública — y EPO OPS se ganó el puesto: registro
-abierto con mail común, 4 GB/semana gratis, y EP+WO que ES el
-pipeline internacional de invención. El código ya está pegado,
-validado (27 checks + smoke en vivo de 8 fetchers) y dormido en skip
-limpio: activar = crear los DOS secrets cuando la EPO habilite la
-cuenta. Mientras tanto el radar bucea patentes todos los días con
-Google News EN+ES. Buen trabajo — lo estructurado ya tiene ruta.
+Día cerrado (17/10, corrida 14). Balance v3.10: segunda corrida de
+fase 3 VERDE y con el sistema autoverificándose de punta a punta —
+R13 cerró exacto (12+9+20+19+20+20+2 = 102 evaluados; persist 116 =
+218 − 102) y la memoria encadenó perfecto entre corridas (1008 −
+187 = 821 = 1039 − 218): seen.json viaja ida y vuelta sin perder NI
+UN registro. El backlog de reintentos baja 234 → 187 → 116 y el
+rescate JSON cumplió otra vez (40/40 objetos completos salvados; los
+20 truncados reintentan mañana, R5). El radar bucea patentes keyless
+todos los días (15 EN + 10 ES) y EPO OPS sigue dormida en skip
+limpio esperando UNA sola cosa: que la EPO habilite la cuenta →
+My Apps → los DOS secrets (§13) → la corrida siguiente la activa
+sola. Cero código pendiente: los pendientes son todos externos.
+Mañana, chequeo nuevo del protocolo: la línea "dedup" debe decir
+memoria: 923 + nuevos del día (si solo corre la corrida diaria).
+Si no da eso, avisar.
