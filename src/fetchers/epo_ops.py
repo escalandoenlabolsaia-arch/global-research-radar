@@ -1,6 +1,11 @@
 """Fetcher EPO OPS (Open Patent Services) — publicaciones EP + WO.
-La fuente global de patentes que reemplaza a Lens (v3.9, manual §10):
-registro ABIERTO con mail común en developers.epo.org, gratis hasta
+La fuente global de patentes que reemplaza a Lens (v3.9, manual §10).
+v3.9.1 — FIX AUTH (corrida 15, primer contacto real, R11): el POST de
+token exige body form grant_type=client_credentials; con data="" la
+EPO responde 400 "Required param : grant_type". Los sondeos sin
+credenciales reales no lo vieron: el 401 del Basic se valida ANTES
+que el body y enmascaraba el error.
+Registro ABIERTO con mail común en developers.epo.org, gratis hasta
 4 GB/semana (carta de fair-use de la EPO) y los mismos datos que
 Espacenet. El índice de BÚSQUEDA de OPS cubre EP (solicitudes y
 concesiones europeas) + WO (PCT = el pipeline internacional de
@@ -20,9 +25,11 @@ de registro 200) — SIN validar en vivo con credenciales reales hasta
 que la cuenta se habilite. Esa primera corrida se lee con lupa (R11).
 
 Calibración (sondeos 11-13, manual §10):
-  - POST {AUTH} con Authorization: Basic base64(key:secret) devuelve
-    JSON {access_token, expires_in ~1200s}. Token fresco por corrida:
-    1 request mínimo, cero estados que pudrirse.
+  - POST {AUTH} con Authorization: Basic base64(key:secret) y body
+    form grant_type=client_credentials devuelve JSON {access_token,
+    expires_in ~1200s} — es la forma literal de la doc oficial de la
+    EPO (curl --data "grant_type=client_credentials"). Token fresco
+    por corrida: 1 request mínimo, cero estados que pudrirse.
   - GET {SEARCH}?q=...&Range=a-b con Bearer → XML ops:world-patent-data.
   - El índice NO documenta orden por fecha ni parámetro de sort: sin
     muestreo, la página 1 devolvería siempre la misma cabeza del
@@ -72,8 +79,12 @@ KIND = {
 
 def _token(key: str, secret: str) -> str:
     basic = base64.b64encode(f"{key}:{secret}".encode("utf-8")).decode("ascii")
-    r = post(AUTH, data="", timeout=30,
-             headers={"Authorization": f"Basic {basic}"})
+    # OAuth exige el grant_type en el BODY form-encoded (no en la
+    # query, no en JSON — RFC 6749). Corrida 15: data="" → 400
+    # "Required param : grant_type" con credenciales reales. requests
+    # form-encodea el dict y setea el Content-Type correcto solo.
+    r = post(AUTH, data={"grant_type": "client_credentials"},
+             timeout=30, headers={"Authorization": f"Basic {basic}"})
     tok = (r.json() or {}).get("access_token", "").strip()
     if not tok:
         raise RuntimeError("ops auth sin access_token en la respuesta")
