@@ -5,6 +5,20 @@ token exige body form grant_type=client_credentials; con data="" la
 EPO responde 400 "Required param : grant_type". Los sondeos sin
 credenciales reales no lo vieron: el 401 del Basic se valida ANTES
 que el body y enmascaraba el error.
+v3.9.2 — FIX VENTANA VACÍA (corrida 16, primera con la auth de
+v3.9.1 pasando, R11): el token entró limpio y el índice contestó
+404 + fault SERVER.EntityNotFound "No results found". NO es un error:
+es la forma de OPS de decir "búsqueda sin resultados" (sintaxis pd
+within "aaaammdd aaaaammdd" verificada contra docs oficiales — el
+índice simplemente no tenía nada en la ventana). La ventana de 2
+días había caído en sábado→lunes: EP y WO publican en días fijos de
+la semana (EP ~miércoles, WO ~jueves), así que varias corridas por
+semana no tienen publicaciones nuevas que mostrar. Tres fixes:
+(1) ese 404 se traduce a 0 resultados y la fuente termina feliz
+(como openFDA en día sin carga); (2) days_back 2→7: toda corrida
+pesca el boletín semanal aunque una fuente publique 1 día/semana;
+(3) techo de muestreo en el registro 2000: límite duro del parámetro
+Range en la EPO, y con 7 días el total lo supera siempre.
 Registro ABIERTO con mail común en developers.epo.org, gratis hasta
 4 GB/semana (carta de fair-use de la EPO) y los mismos datos que
 Espacenet. El índice de BÚSQUEDA de OPS cubre EP (solicitudes y
@@ -75,6 +89,47 @@ KIND = {
     "T1": "traducción publicada", "T2": "traducción publicada", "T3": "traducción publicada",
     "U1": "modelo de utilidad", "U": "modelo de utilidad",
 }
+
+
+class VentanaVacia(Exception):
+    """404 + SERVER.EntityNotFound = la búsqueda no matcheó ninguna
+    publicación. Es la respuesta ESTÁNDAR de OPS para un resultado
+    vacío (visto en vivo en la corrida 16 tras auth correcta; docs
+    oficiales confirman que la sintaxis era válida). No debe
+    reintentarse ni marcar la fuente como caída (R6)."""
+
+
+def _get_busqueda(params: dict, headers: dict, intentos: int = 2):
+    """GET al índice distinguiendo 'ventana vacía' de error real.
+    Usa common.get con retries=1: el reintento genérico quemaría 3
+    intentos + 7s en un 404 de ventana vacía, que es PERMANENTE, no
+    transitorio. Los reintentos propios son solo para fallos que SÍ
+    pueden ser transitorios (red, 5xx, 429)."""
+    for intento in range(1, intentos + 1):
+        try:
+            return get(SEARCH, params=params, timeout=60, retries=1,
+                       headers=headers)
+        except Exception as e:  # noqa: BLE001 — se inspecciona el mensaje
+            msg = str(e)
+            if "404" in msg and ("EntityNotFound" in msg
+                                 or "No results found" in msg):
+                raise VentanaVacia(
+                    "0 publicaciones en la ventana (fault estándar de OPS)") from e
+            if intento == intentos:
+                raise
+            time.sleep(2 ** (intento - 1))
+
+
+def _pagina_aleatoria(total: int, max_results: int) -> tuple:
+    """Página aleatoria dentro del techo DURO de la EPO: el parámetro
+    Range no puede pasar del registro 2000 (con la ventana de 7 días
+    el total lo supera siempre). Muestreo honesto dentro de lo que la
+    API deja ver; la dedup cobra cada publicación UNA vez en la vida."""
+    techo = min(max(total, 1), 2000)
+    if techo <= max_results:
+        return 1, techo
+    inicio = random.randint(1, techo - max_results + 1)
+    return inicio, min(inicio + max_results - 1, techo)
 
 
 def _token(key: str, secret: str) -> str:
@@ -167,29 +222,40 @@ def fetch(cfg: dict) -> list:
                  "abierto en developers.epo.org, manual §13)")
         return []
 
-    days_back = int(ep.get("days_back", 2))
+    days_back = int(ep.get("days_back", 7))
     max_results = min(int(ep.get("max_results", 100)), 100)
     desde = (date.today() - timedelta(days=days_back)).strftime("%Y%m%d")
     hasta = date.today().strftime("%Y%m%d")
     q = f'pd within "{desde} {hasta}"'
     bearer = {"Authorization": f"Bearer {_token(key, secret)}"}
 
-    # Request 1 — sondeo barato del total del índice en la ventana
-    total, _ = _parsear_biblio(get(SEARCH, params={"q": q, "Range": "1-1"},
-                                   timeout=60, headers=bearer))
+    # Request 1 — sondeo barato del total del índice en la ventana.
+    # 404 EntityNotFound = 0 publicaciones: termina feliz (v3.9.2).
+    try:
+        total, _ = _parsear_biblio(
+            _get_busqueda({"q": q, "Range": "1-1"}, bearer))
+    except VentanaVacia:
+        log.info("epo_ops — 0 publicaciones en la ventana (%s → %s): "
+                 "NORMAL, no error (como openFDA en día sin carga)",
+                 desde, hasta)
+        return []
     if total <= 0:
         log.info("epo_ops — 0 publicaciones en la ventana (%s → %s): "
-                 "NORMAL, no error (como openFDA)", desde, hasta)
+                 "NORMAL, no error", desde, hasta)
         return []
     time.sleep(1.0)  # ritmo polido entre requests (R3)
 
-    # Request 2 — página aleatoria de hasta max_results registros
-    inicio = (1 if total <= max_results
-              else random.randint(1, total - max_results + 1))
-    fin = min(inicio + max_results - 1, total)
-    _, docs = _parsear_biblio(get(SEARCH,
-                                  params={"q": q, "Range": f"{inicio}-{fin}"},
-                                  timeout=60, headers=bearer))
+    # Request 2 — página aleatoria dentro del techo de la EPO (2000)
+    inicio, fin = _pagina_aleatoria(total, max_results)
+    try:
+        _, docs = _parsear_biblio(
+            _get_busqueda({"q": q, "Range": f"{inicio}-{fin}"}, bearer))
+    except VentanaVacia:
+        # Carrera ínfima: el índice se movió entre los 2 requests.
+        # Nada entró a memoria: no hay nada que perder ni rescatar.
+        log.warning("epo_ops — la página %d-%d volvió vacía (la ventana "
+                    "se movió entre requests); sigue la corrida", inicio, fin)
+        return []
     items = []
     sin_titulo = 0
     for d in docs:
@@ -198,7 +264,9 @@ def fetch(cfg: dict) -> list:
             items.append(it)
         else:
             sin_titulo += 1
-    log.info("epo_ops: %d ítems (página %d-%d de %d en %s → %s; %d docs sin "
-             "título descartados)", len(items), inicio, fin, total, desde,
+    de = str(total) if total <= 2000 else (
+        f"{total} — muestreo dentro de los primeros 2000: techo de la EPO")
+    log.info("epo_ops: %d ítems (página %d-%d de %s en %s → %s; %d docs sin "
+             "título descartados)", len(items), inicio, fin, de, desde,
              hasta, sin_titulo)
     return items
