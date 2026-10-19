@@ -19,12 +19,24 @@ semana no tienen publicaciones nuevas que mostrar. Tres fixes:
 pesca el boletín semanal aunque una fuente publique 1 día/semana;
 (3) techo de muestreo en el registro 2000: límite duro del parámetro
 Range en la EPO, y con 7 días el total lo supera siempre.
+v3.9.3 — FIX TECHO REAL (corrida 17, R11): el techo de 2000 no es
+del Range sino de la QUERY ENTERA: FAQ oficial de la EPO — "If there
+are more than 2 000 hits in your results list, you will have to
+limit your search query to reduce the number of results". Con
+86502 hits la EPO devolvió el total pero CERO documentos (ops:search-
+result vacío, XSD: es opcional) — la página salió "0 ítems" sin
+error. Rediseño: se sondea UNA subclase IPC al azar por corrida
+(ic=<sub> and pd within "..."): tajada angosta del flujo semanal
+mundial, siempre bajo el techo, muestreo honesto rotatorio (la dedup
+cobra cada documento UNA vez). Hasta 4 subclases por corrida: si la
+elegida da 0 resultados o supera 2000 hits, el log lo dice y se
+prueba la siguiente.
 Registro ABIERTO con mail común en developers.epo.org, gratis hasta
 4 GB/semana (carta de fair-use de la EPO) y los mismos datos que
-Espacenet. El índice de BÚSQUEDA de OPS cubre EP (solicitudes y
-concesiones europeas) + WO (PCT = el pipeline internacional de
-invención); las concesiones US se cubren con Google News RSS hoy y
-con PatentsView/ODP el día que USPTO las rearme.
+Espacenet. El índice de BÚSQUEDA de OPS es MUNDIAL (DOCDB, ~100
+oficinas: incluye EP, WO/PCT y las concesiones US que PatentsView
+no da — la descripción "EP+WO" correspondía al retrieval, no a
+search; corrida 17 lo probó con 86502 resultados en 7 días).
 
 Activación (mismo patrón que NTFY_TOKEN/GROQ_API_KEY, R15):
   cuenta en developers.epo.org → My Apps → definir app → Consumer
@@ -132,6 +144,26 @@ def _pagina_aleatoria(total: int, max_results: int) -> tuple:
     return inicio, min(inicio + max_results - 1, techo)
 
 
+# Subclases IPC candidatas (nivel de 4 caracteres, válido según CQL:
+# ic=H04W — ejemplos del cliente Go oficial de referencia). Tajada
+# angosta = siempre bajo el techo de 2000. Las súper hot (A61 medicina,
+# G06 computación, H01/H04 electrónica/telecom) entran IGUAL: si el
+# sondeo da >2000 hits el log lo dice y se prueba la siguiente —
+# preferimos que la EPO decida, no nuestra estimación.
+SUBCLASES_IPC = (
+    "A01", "A23", "A24", "A41", "A43", "A45", "A47", "A61", "A62", "A63",
+    "B01", "B05", "B08", "B21", "B23", "B25", "B27", "B29", "B32", "B33",
+    "B41", "B60", "B62", "B63", "B64", "B65", "B81", "B82",
+    "C02", "C05", "C07", "C08", "C09", "C11", "C12", "C14", "C21", "C22",
+    "C23", "C25", "C30",
+    "E02", "E04", "E21", "F01", "F03", "F04", "F15", "F16", "F17", "F21",
+    "F24", "F28", "F41", "F42",
+    "G01", "G02", "G03", "G05", "G06", "G08", "G10", "G15", "G16", "G21",
+    "H01", "H02", "H03", "H04", "H05", "H10",
+)
+INTENTOS_SUBCLASE = 4  # sondeos máximos por corrida (rota al azar)
+
+
 def _token(key: str, secret: str) -> str:
     basic = base64.b64encode(f"{key}:{secret}".encode("utf-8")).decode("ascii")
     # OAuth exige el grant_type en el BODY form-encoded (no en la
@@ -226,47 +258,67 @@ def fetch(cfg: dict) -> list:
     max_results = min(int(ep.get("max_results", 100)), 100)
     desde = (date.today() - timedelta(days=days_back)).strftime("%Y%m%d")
     hasta = date.today().strftime("%Y%m%d")
-    q = f'pd within "{desde} {hasta}"'
     bearer = {"Authorization": f"Bearer {_token(key, secret)}"}
 
-    # Request 1 — sondeo barato del total del índice en la ventana.
-    # 404 EntityNotFound = 0 publicaciones: termina feliz (v3.9.2).
-    try:
-        total, _ = _parsear_biblio(
-            _get_busqueda({"q": q, "Range": "1-1"}, bearer))
-    except VentanaVacia:
-        log.info("epo_ops — 0 publicaciones en la ventana (%s → %s): "
-                 "NORMAL, no error (como openFDA en día sin carga)",
-                 desde, hasta)
-        return []
-    if total <= 0:
-        log.info("epo_ops — 0 publicaciones en la ventana (%s → %s): "
-                 "NORMAL, no error", desde, hasta)
-        return []
-    time.sleep(1.0)  # ritmo polido entre requests (R3)
+    # La query pd-only de 7 días pisa el techo de 2000 hits (86502 en
+    # la corrida 17) y la EPO NO sirve documentos por encima (FAQ
+    # oficial). v3.9.3: una subclase IPC al azar = tajada angosta y
+    # honesta del flujo semanal, siempre bajo el techo.
+    elegidas = random.sample(SUBCLASES_IPC, INTENTOS_SUBCLASE)
+    motivos, ultimo_q = [], ""
+    for sub in elegidas:
+        q = f'ic={sub} and pd within "{desde} {hasta}"'
+        ultimo_q = q
+        try:
+            total, _ = _parsear_biblio(
+                _get_busqueda({"q": q, "Range": "1-1"}, bearer))
+        except VentanaVacia:
+            motivos.append(f"{sub}: 0 publicaciones esta semana")
+            continue
+        except Exception as e:  # noqa: BLE001 — red/4xx: probar otra subclase
+            log.warning("epo_ops — sondeo %s falló (%s) — pruebo otra "
+                        "subclase", sub, str(e)[:160])
+            motivos.append(f"{sub}: error")
+            continue
+        if total <= 0:
+            motivos.append(f"{sub}: 0 publicaciones esta semana")
+            continue
+        if total > 2000:
+            log.info("epo_ops — %s: %d resultados supera el techo de 2000 "
+                     "hits de la EPO; pruebo otra subclase", sub, total)
+            motivos.append(f"{sub}: {total} > 2000")
+            continue
+        time.sleep(1.0)  # ritmo polido entre requests (R3)
 
-    # Request 2 — página aleatoria dentro del techo de la EPO (2000)
-    inicio, fin = _pagina_aleatoria(total, max_results)
-    try:
-        _, docs = _parsear_biblio(
-            _get_busqueda({"q": q, "Range": f"{inicio}-{fin}"}, bearer))
-    except VentanaVacia:
-        # Carrera ínfima: el índice se movió entre los 2 requests.
-        # Nada entró a memoria: no hay nada que perder ni rescatar.
-        log.warning("epo_ops — la página %d-%d volvió vacía (la ventana "
-                    "se movió entre requests); sigue la corrida", inicio, fin)
-        return []
-    items = []
-    sin_titulo = 0
-    for d in docs:
-        it = _to_item(d)
-        if it:
-            items.append(it)
-        else:
-            sin_titulo += 1
-    de = str(total) if total <= 2000 else (
-        f"{total} — muestreo dentro de los primeros 2000: techo de la EPO")
-    log.info("epo_ops: %d ítems (página %d-%d de %s en %s → %s; %d docs sin "
-             "título descartados)", len(items), inicio, fin, de, desde,
-             hasta, sin_titulo)
-    return items
+        inicio, fin = _pagina_aleatoria(total, max_results)
+        try:
+            _, docs = _parsear_biblio(
+                _get_busqueda({"q": q, "Range": f"{inicio}-{fin}"}, bearer))
+        except VentanaVacia:
+            # Carrera ínfima: el índice se movió entre los 2 requests.
+            motivos.append(f"{sub}: página {inicio}-{fin} vacía")
+            continue
+        items = []
+        sin_titulo = 0
+        for d in docs:
+            it = _to_item(d)
+            if it:
+                items.append(it)
+            else:
+                sin_titulo += 1
+        log.info("epo_ops: %d ítems (subclase IPC %s, página %d-%d de %d "
+                 "en %s → %s; %d docs sin título descartados)",
+                 len(items), sub, inicio, fin, total, desde, hasta,
+                 sin_titulo)
+        return items
+
+    if any(m.endswith("error") for m in motivos):
+        # Error de red/HTTP en TODOS los intentos: que se vea como
+        # falla de fuente (run.py lo loguea R6 y la corrida sigue).
+        raise RuntimeError(
+            f"epo_ops sin subclase viable en {INTENTOS_SUBCLASE} intentos "
+            f"(última query: {ultimo_q}) — motivos: {'; '.join(motivos)}")
+    log.info("epo_ops — sin subclase con resultados esta corrida (%s): "
+             "NORMAL, mañana rota otra (ventana %s → %s)",
+             "; ".join(motivos), desde, hasta)
+    return []
