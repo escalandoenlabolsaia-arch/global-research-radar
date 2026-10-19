@@ -94,9 +94,12 @@ lens:                       # DESCARTADA sin mail académico: la gratuita
   # enabled: false          # algún día cambia el acceso
 
 epo_ops:                    # EPO OPS — publicaciones EP + WO (PCT): el
-  days_back: 2              # pipeline internacional de invención. 2
-  max_results: 100          # requests/corrida: sondeo del total + página
-  # enabled: false          # ALEATORIA (anti-sesgo de orden del índice).
+  days_back: 7              # pipeline internacional de invención. EP y WO
+  max_results: 100          # publican en días fijos de la semana (EP ~mié,
+  # enabled: false          # WO ~jue): ventana de 7 días para que toda
+                            # corrida los pesque. 2 requests/corrida:
+                            # sondeo + página aleatoria dentro del techo
+                            # de 2000 registros de la EPO (§10).
 
 agent:
   # Vacío = auto-descubre el mejor modelo disponible en cada corrida.
