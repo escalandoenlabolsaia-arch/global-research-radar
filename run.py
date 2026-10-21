@@ -6,6 +6,9 @@ v3.8: fuentes Fase 3 (patentes) — patentsview + lens en el dispatch
 (salta solos si no existen los secrets; Google News patentes vía rss).
 v3.9: + epo_ops (EPO OPS, publicaciones EP+WO) en el dispatch — skip
 silencioso hasta crear los secrets OPS_CONSUMER_KEY/OPS_CONSUMER_SECRET.
+v3.10: + nih_reporter (NIH RePORTER, financiamiento/predicción) en el
+dispatch — keyless (sin secret, patrón OpenAlex). Proyectos con inicio
+FUTURO son señal de anticipación, no ruido.
 """
 import logging
 import os
@@ -16,7 +19,7 @@ from pathlib import Path
 
 from src.config import load
 from src.fetchers import (openalex, arxiv, rss_generic, clinicaltrials,
-                          openfda, patentsview, lens, epo_ops)
+                          openfda, patentsview, lens, epo_ops, nih_reporter)
 from src.pipeline import normalize, dedup, caps
 from src.agent import evaluator
 from src.notify import ntfy
@@ -70,7 +73,8 @@ def main() -> int:
                         ("openfda", openfda),
                         ("patentsview", patentsview),
                         ("lens", lens),
-                        ("epo_ops", epo_ops)]:
+                        ("epo_ops", epo_ops),
+                        ("nih_reporter", nih_reporter)]:
         try:
             raw += mod.fetch(cfg)
         except Exception as e:
