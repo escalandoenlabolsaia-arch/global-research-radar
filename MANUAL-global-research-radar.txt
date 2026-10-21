@@ -1,8 +1,8 @@
 =====================================================================
-MANUAL — GLOBAL-RESEARCH-RADAR  (v3.12 · FASE 4 EN CURSO — NIH
-REPORTER ACTIVO EN PRODUCCIÓN: CORRIDA 21 CON 100 PROYECTOS Y 1
-FUTURO DETECTADO · SIGUIENTE: COMPLETAR FASE 4 CON CORDIS/UKRI/
-KAKEN/ARC/SBIR)
+MANUAL — GLOBAL-RESEARCH-RADAR  (v3.13 · FASE 4 EN CURSO — NIH
+REPORTER ACTIVO EN PRODUCCIÓN · §14 BACKLOG DE IDEAS A $0
+INCORPORADO · SIGUIENTE: COMPLETAR FASE 4 CON CORDIS/UKRI/KAKEN/
+ARC/SBIR)
 Monitoreo global de todo lo público que se investiga, descubre,
 patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -288,7 +288,7 @@ global-research-radar/
 │                          autolimitada a 100k registros ≈ 7 meses)
 ├─ reports/              AAAA-MM-DD.md por corrida — fuente completa
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.12)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.13)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -316,7 +316,7 @@ global-research-radar/
       nih_reporter falló (fetch() missing 1 required positional
         argument: 'state') .... lección c20: el dispatch de run.py
         pasa (cfg, state), no solo cfg. Los fetchers nuevos se
-        firman con fetch(cfg, state=None).
+        firman con fetch(cfg, state=None) (R19).
   • Síntomas y significado exacto (heredados):
       openalex: 0 ítems ....... revisar polite_email
       rss: falló (404) ........ URL muerta → cambiar en yaml
@@ -395,7 +395,7 @@ global-research-radar/
     atrapó el fallo y la corrida siguió: 821 fetch (sin NIH), 422
     nuevos, 251 al agente, 173 evaluados (R13 exacto por SEXTA vez),
     persist 249. epo_ops: 25 ítems (subclase C25, página 288-312 de
-    333). LECCIÓN (R19 candidata): los fetchers nuevos se firman con
+    333). LECCIÓN (R19): los fetchers nuevos se firman con
     fetch(cfg, state=None) porque el dispatch de run.py es uniforme.
   FIX (21/10, v3.10): nih_reporter.fetch(cfg, state=None) — cambio
     de una línea en la firma + docstring explicativo. Todo lo demás
@@ -447,10 +447,8 @@ global-research-radar/
     R18. La duración de una corrida es ARITMÉTICA, no un síntoma:
          fetch + techo(pool/20) chunks × 50 s + LLM. Verificar las
          LÍNEAS del log, nunca el cronómetro.
-    R19 (nueva). Los fetchers nuevos se firman fetch(cfg, state=
-         None): el dispatch de run.py es uniforme y pasa (cfg, state)
-         a TODOS. Si el fetcher no usa state, se acepta e ignora
-         (lección corrida 20, bug de NIH).
+    R19. Los fetchers nuevos se firman fetch(cfg, state=None): el
+         dispatch de run.py es uniforme y pasa (cfg, state) a TODOS.
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
@@ -468,13 +466,12 @@ global-research-radar/
                        idéntica: sondeos curl en vivo ANTES de
                        escribir código (R11/R17); ids de dominio
                        grant:<fuente>:<id>; caps override 25;
-                       evaluador v3.3 intacto (rubro
-                       "financiamiento" ya existe).
+                       evaluador v3.3 intacto.
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST (actualizado v3.12)
+12) CHECKLIST (actualizado v3.13)
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.12)
+[x] Manual actualizado (este archivo, v3.13)
 [x] Secret NTFY_TOPIC creado y probado
 [x] Workflow permissions: read and write
 [x] Código fase 1 completo — corrida 11 verde
@@ -519,6 +516,8 @@ global-research-radar/
     y "100 ítems (1 con inicio FUTURO)"; fetch 921; R13 exacto
     SÉPTIMA vez; persist 193; epo_ops subclase C12 (rotó)
 [x] R19 (nueva): fetch(cfg, state=None) para fetchers nuevos
+[x] §14 BACKLOG DE IDEAS incorporado (9 mejoras a $0, priorizadas,
+    con qué toca / qué NO toca) — v3.13
 [ ] FASE 4 pendiente: sondeos en vivo de CORDIS/ERC · UKRI · KAKEN
     · ARC · SBIR · Wellcome · Gates (metodología idéntica a NIH)
 [ ] Semana de observación: cada día mirar UNA línea — "persist: N
@@ -541,9 +540,12 @@ global-research-radar/
 [ ] (opcional) WHO ICTRP: formulario de WHO para el Sharepoint
 [ ] (opcional) Retención 180 días de reports/ (snippet en §13)
 [ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
+[ ] §14 BACKLOG: activar las 9 ideas de a UNA, con metodología
+    sondeo → fetcher → corrida → observar. Nada se activa en
+    bloque (disciplina R6/R15/R19).
 
 13) EXTRAS LISTOS PARA ACTIVAR (fases futuras)
-  KEYS DE PATENTES — estado real v3.12:
+  KEYS DE PATENTES — estado real v3.13:
     1) EPO OPS — ✅ ACTIVA DESDE LA CORRIDA 19. Guía de recreación
        por si hiciera falta: developers.epo.org → login → My Apps
        → definir app → copiar Consumer Key y Consumer Secret →
@@ -563,7 +565,7 @@ global-research-radar/
     NOTA: crear un secret NO toca código — el workflow ya mapea
     PATENTSVIEW_API_KEY, LENS_API_TOKEN, OPS_CONSUMER_KEY y
     OPS_CONSUMER_SECRET desde v3.9.
-  FUENTES DE FINANCIAMIENTO — estado real v3.12:
+  FUENTES DE FINANCIAMIENTO — estado real v3.13:
     1) NIH RePORTER — ✅ ACTIVA DESDE LA CORRIDA 21. Keyless (sin
        secret). No requiere registro. Si la API devolviera 0 varios
        días: revisar fiscal_years en sources.yaml (en 2027 pasar a
@@ -622,25 +624,137 @@ global-research-radar/
   BLINDAJE NTFY (opcional): cuenta gratis en ntfy.sh → reservar el
   topic → crear access token → secret NTFY_TOKEN.
 
-Día cerrado (21/10, corridas 20-21). Balance v3.12: FASE 4 EN CURSO
-CON LA PRIMERA FUENTE DE FINANCIAMIENTO ACTIVA. NIH RePORTER quedó
-en producción en la corrida 21: 100 proyectos pedidos, 100
-recibidos, 1 con inicio FUTURO detectado — la señal de anticipación
-que motivó la fase 4 está viva. La corrida 20 sirvió de lección: el
-fetcher se escribió con fetch(cfg) y el dispatch de run.py pasa
-(cfg, state); el try/except de R6 atrapó el fallo y la corrida
-siguió sin NIH, lo que permitió ver el bug en producción sin perder
-el día. El fix fue una línea (fetch(cfg, state=None)) y quedó
-anotado como R19. La aritmética cerró exacta por SÉPTIMA vez
-consecutiva y la subclase IPC de OPS rotó por tercera corrida
-seguida (B81 → C25 → C12), lo que confirma que el sampling
-aleatorio funciona. El radar bucea HOY: papers (OpenAlex + arXiv),
-prensa científica (8 RSS), patentes (Google News EN/ES + EPO OPS
-mundial), ensayos (ClinicalTrials.gov), regulatorio (openFDA ×3) y
-financiamiento (NIH RePORTER) — todo $0. Pendiente de código:
-completar fase 4 con CORDIS/ERC (registro + API Key), UKRI (a
-sondear), KAKEN (appid vía CiNii), ARC (a sondear) y SBIR
-(verificar mantenimiento) — arrancamos con sondeos en vivo, como
-siempre. Mañana, chequeo nuevo del protocolo: la línea "dedup" debe
-decir memoria: 1837 + nuevos del día (2030 − 193 de persist de
-hoy). Si no da eso, avisar.
+14) BACKLOG DE IDEAS — TODAS A $0 (v3.13)
+  Hoja de ruta de mejoras que la lógica del radar pide y que el
+  manual todavía no cubre. NADA de esto se activa en bloque: se
+  activa de a UNA, con la metodología de siempre (sondeo en vivo →
+  fetcher → corrida → observar), cuando la fase anterior corre
+  limpia. Cada idea indica qué toca y qué NO toca, para que la
+  decisión sea informada.
+
+  GRUPO A — MEJORAS SOBRE LO YA EXISTENTE (sin fuentes nuevas)
+  A1. Puntaje de anticipación explícito.
+      Qué: en el resumen de nih_reporter, además de "inicio
+      2027-03-02 (FUTURO)", agregar la distancia en días:
+      "(+90d)", "(+180d)", "(+365d)".
+      Por qué: el agente ya sabe puntuar; le das la señal digerida
+      y separa "arranca en 3 meses" de "arranca en 18".
+      Costo: 1 línea en nih_reporter.py. Toca: fetcher de NIH.
+      NO toca: evaluator.py, pipeline, run.py.
+      Prioridad: ALTA (baratísima, alto impacto en predicción).
+  A2. Señales convergentes del día.
+      Qué: post-proceso que detecta cuando 3+ fuentes distintas
+      del mismo día hablan del mismo tema (ej. paper OpenAlex +
+      patente OPS + grant NIH sobre "nanotecnología para cáncer")
+      y arma una sección "🔗 Señales convergentes del día" en el
+      reporte.
+      Por qué: la señal más valiosa no es el ítem suelto, es la
+      convergencia entre fuentes. Es lo que ningún radar gratuito
+      hace bien.
+      Costo: ~20 líneas en run.py (post-proceso del reporte). Toca:
+      run.py (solo la escritura del reporte). NO toca: fetchers,
+      evaluator, pipeline.
+      Prioridad: ALTA (convierte agregador en sistema de
+      anticipación).
+  A3. Memoria de predicciones (acierto del radar).
+      Qué: cuando un grant con FUTURO cumple su fecha de inicio,
+      buscar si generó papers/patentes/ensayos (cruce por org_name
+      + keywords) y anotar el acierto. Score acumulado: "de los 12
+      futuros detectados en 2026, 8 ya tienen paper".
+      Por qué: la diferencia entre agregador y sistema que aprende.
+      Costo: ~50 líneas (script aparte que lee seen.json + query
+      OpenAlex). Toca: script nuevo. NO toca: pipeline diario.
+      Prioridad: MEDIA (potente, pero requiere fase 4 madura).
+
+  GRUPO B — FUENTES NUEVAS QUE CIERRAN HUECOS (baratas, $0)
+  B1. bioRxiv + medRxiv (preprints biosalud).
+      Qué: 2 feeds RSS/API keyless, 1 línea de yaml cada uno.
+      Por qué: cierra el hueco de preprints biosalud (hoy solo
+      arXiv q-bio, tajada chica).
+      Costo: 1 línea de yaml + probar URL en sondeo. Toca:
+      sources.yaml (y quizás un fetcher RSS ya existente). NO toca:
+      evaluator.
+      Prioridad: ALTA (la más barata del backlog, mucho volumen).
+  B2. Retracciones y correcciones (Crossref).
+      Qué: endpoint de retracciones de Crossref, 1 request/corrida.
+      Detecta papers retractados que el radar ya vio.
+      Por qué: un paper retractado es señal de que el campo está
+      en revisión. Ningún radar gratuito lo da bien.
+      Costo: fetcher chico (~40 líneas, patrón fase 2). Toca:
+      fetchers/retractions.py + yaml + run.py. NO toca: evaluator.
+      Prioridad: ALTA (1 request, valor único).
+  B3. Cambios de fase/estado de ensayos clínicos.
+      Qué: comparar contra seen.json y detectar cuando un ensayo
+      cambia de Fase 2 → Fase 3, o Reclutando → Completado.
+      Por qué: avance real, no ruido.
+      Costo: ~30 líneas en clinicaltrials.py (usa la misma mecánica
+      de anti-pérdida). Toca: fetcher de CT.gov. NO toca:
+      evaluator, pipeline.
+      Prioridad: MEDIA (buena señal, requiere cuidado con el id de
+      dominio para no duplicar).
+
+  GRUPO C — PERSONALIZACIÓN (no del manual, pero tu lógica)
+  C1. Modo "tesis" — tema foco por semana.
+      Qué: focus_topic en sources.yaml (ej. "ALS", "baterías de
+      sodio"). Cuando está seteado, OpenAlex/arXiv/NIH priorizan
+      ese tema y el agente lo puntúa más alto.
+      Por qué: convierte el radar general en radar personalizado
+      sin perder cobertura global.
+      Costo: 1 línea de yaml + ~10 líneas en los fetchers de
+      OpenAlex/arXiv/NIH para agregar el término a la query.
+      Toca: 3 fetchers + yaml. NO toca: evaluator.
+      Prioridad: MEDIA (depende de que quieras profundizar).
+  C2. Digest semanal (domingo).
+      Qué: script aparte que lee los reports/ de la semana y arma
+      reports/weekly.md con top 10 + señales convergentes + acierto
+      de predicciones.
+      Por qué: lo que te llevás a leer el domingo con café.
+      Costo: script aparte (~60 líneas) + 1 cron nuevo (o el mismo
+      workflow con un `if` de día). NO toca: pipeline diario.
+      Prioridad: MEDIA (calidad de vida, no cobertura).
+  C3. Radar de pares (quién más investiga lo mismo).
+      Qué: por tema, ranking de quién publica más (orgs, países,
+      autores). El radar ya tiene esos datos en los ítems; hoy no
+      los explota.
+      Por qué: dice dónde está el momentum global.
+      Costo: script aparte (~50 líneas) que lee reports/. NO toca:
+      pipeline diario.
+      Prioridad: BAJA (nice to have, requiere reports con autoría
+      bien parseada).
+
+  ORDEN RECOMENDADO DE ACTIVACIÓN (después de cerrar fase 4):
+    1. A1 (1 línea, impacto inmediato en predicción)
+    2. B1 (2 líneas de yaml, cierra hueco grande)
+    3. B2 (retracciones, 1 request, valor único)
+    4. A2 (señales convergentes, convierte el radar en sistema)
+    5. B3 (cambios de fase de ensayos)
+    6. A3 (memoria de predicciones, cuando fase 4 esté madura)
+    7. C1, C2, C3 (personalización, según tu necesidad)
+  DISCIPLINA: cada idea se activa sola, se observa 1 semana, y
+  recién entonces se pasa a la siguiente. Nada se activa en bloque.
+
+Día cerrado (21/10, corridas 20-21). Balance v3.13: FASE 4 EN
+CURSO CON LA PRIMERA FUENTE DE FINANCIAMIENTO ACTIVA Y BACKLOG DE
+IDEAS A $0 INCORPORADO. NIH RePORTER quedó en producción en la
+corrida 21: 100 proyectos pedidos, 100 recibidos, 1 con inicio
+FUTURO detectado — la señal de anticipación que motivó la fase 4
+está viva. La corrida 20 sirvió de lección: el fetcher se escribió
+con fetch(cfg) y el dispatch de run.py pasa (cfg, state); el
+try/except de R6 atrapó el fallo y la corrida siguió sin NIH, lo
+que permitió ver el bug en producción sin perder el día. El fix
+fue una línea (fetch(cfg, state=None)) y quedó anotado como R19.
+La aritmética cerró exacta por SÉPTIMA vez consecutiva y la
+subclase IPC de OPS rotó por tercera corrida seguida (B81 → C25 →
+C12). Además, el manual incorporó §14 — BACKLOG DE IDEAS con 9
+mejoras priorizadas, todas a $0, con qué toca y qué NO toca, para
+que la hoja de ruta no se pierda y nada se active en bloque. El
+radar bucea HOY: papers (OpenAlex + arXiv), prensa científica (8
+RSS), patentes (Google News EN/ES + EPO OPS mundial), ensayos
+(ClinicalTrials.gov), regulatorio (openFDA ×3) y financiamiento
+(NIH RePORTER) — todo $0. Pendiente de código: completar fase 4
+con CORDIS/ERC (registro + API Key), UKRI (a sondear), KAKEN
+(appid vía CiNii), ARC (a sondear) y SBIR (verificar
+mantenimiento) — arrancamos con sondeos en vivo, como siempre.
+Mañana, chequeo nuevo del protocolo: la línea "dedup" debe decir
+memoria: 1837 + nuevos del día (2030 − 193 de persist de hoy). Si
+no da eso, avisar.
