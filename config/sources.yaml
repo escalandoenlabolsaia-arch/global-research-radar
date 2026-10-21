@@ -5,6 +5,9 @@
 #        activan con secrets, manual §13; lens descartada sin mail
 #        académico y patentsview congelada por la migración ODP).
 #        PATENTSCOPE: sin API pública (verificado, §10).
+# v3.10 · fase 4 (financiamiento/predicción): NIH RePORTER keyless
+#        (sin secret). Los proyectos con fecha de inicio FUTURA son
+#        SEÑAL DE ANTICIPACIÓN, no ruido: el radar los prioriza.
 # =========================================================
 
 # Email para polite pool de OpenAlex/Crossref (mejora rate limits)
@@ -15,6 +18,7 @@ caps:
   total: 300          # máx ítems que llegan al agente
   # Fase 2: cupo propio para las fuentes biosalud (el resto queda en 50)
   # Fase 3: patentes entran al mismo régimen 25
+  # Fase 4: financiamiento entra al mismo régimen 25
   per_source_override:
     clinicaltrials: 25
     openfda-farmacos: 25
@@ -23,6 +27,7 @@ caps:
     patentsview: 25
     lens: 25
     epo_ops: 25
+    nih_reporter: 25
 
 threshold: 70         # nota mínima 0-100 para entrar al informe
 
@@ -100,6 +105,20 @@ epo_ops:                    # EPO OPS — publicaciones EP + WO (PCT): el
                             # corrida los pesque. 2 requests/corrida:
                             # sondeo + página aleatoria dentro del techo
                             # de 2000 registros de la EPO (§10).
+
+# ---------------- FASE 4 (financiamiento / predicción) ----------------
+# NIH RePORTER: keyless (sin secret, patrón OpenAlex). POST-only.
+# Los proyectos con project_start_date FUTURA son SEÑAL DE ANTICIPACIÓN:
+# el radar los quiere ver meses antes de que arranquen, no los filtra.
+# Trampas confirmadas en sondeos (2026-10-21):
+#   · Pedido en PascalCase, respuesta en snake_case.
+#   · sort_field=project_start_date respeta el orden (desc = más nuevo).
+#   · fiscal_year 2027 = proyectos que arrancan desde 2026-10-01.
+#   · award_amount puede venir null (tolerado).
+nih_reporter:
+  fiscal_years: [2026, 2027]  # año fiscal actual + siguiente (futuros)
+  max_results: 100             # pageSize del único request por corrida
+  # enabled: false             # válvula de emergencia (patrón fase 3)
 
 agent:
   # Vacío = auto-descubre el mejor modelo disponible en cada corrida.
