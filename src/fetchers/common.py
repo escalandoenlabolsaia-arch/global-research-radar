@@ -48,3 +48,31 @@ def post(url, json=None, data=None, timeout=60, retries=3, headers=None):
     return _con_reintentos("POST", url,
                            dict(json=json, data=data, headers=h, timeout=timeout),
                            retries)
+
+
+def post_json(url, payload, logger=None, timeout=60, retries=3, headers=None):
+    """POST con body JSON y parseo tolerante de la respuesta.
+
+    Devuelve el dict/list parseado, o None si la respuesta no es JSON
+    (loguea un fragmento del body para diagnóstico — R4).
+    Pensado para NIH RePORTER (POST-only, respuesta JSON en snake_case).
+    """
+    lg = logger or log
+    try:
+        r = post(url, json=payload, timeout=timeout, retries=retries,
+                 headers=headers)
+    except RuntimeError as e:
+        lg.warning("post_json %s agotó reintentos: %s", url[:80], e)
+        return None
+    try:
+        return r.json()
+    except ValueError:
+        cuerpo = (r.text or "")[:300].replace("\n", " ")
+        lg.warning("post_json %s: respuesta no-JSON | body: %s",
+                   url[:80], cuerpo)
+        return None
+
+
+def get_logger(nombre: str) -> logging.Logger:
+    """Logger nombrado para los fetchers (evita depender del root logger)."""
+    return logging.getLogger(nombre)
