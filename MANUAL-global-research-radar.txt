@@ -1,8 +1,8 @@
 =====================================================================
-MANUAL — GLOBAL-RESEARCH-RADAR  (v3.11 · FASE 3 CERRADA — EPO OPS
-ACTIVA EN PRODUCCIÓN: CORRIDA 19 CON 25 PATENTES REALES · SAGA OPS
-RESUELTA EN CUATRO CAPAS · NUEVA R18: LA DURACIÓN ES ARITMÉTICA ·
-SIGUIENTE: FASE 4 DE FINANCIAMIENTO)
+MANUAL — GLOBAL-RESEARCH-RADAR  (v3.12 · FASE 4 EN CURSO — NIH
+REPORTER ACTIVO EN PRODUCCIÓN: CORRIDA 21 CON 100 PROYECTOS Y 1
+FUTURO DETECTADO · SIGUIENTE: COMPLETAR FASE 4 CON CORDIS/UKRI/
+KAKEN/ARC/SBIR)
 Monitoreo global de todo lo público que se investiga, descubre,
 patenta, aprueba y lanza · 1 agente evaluador · Costo $0
 =====================================================================
@@ -14,6 +14,10 @@ nueva biosciencia, medicamentos, laboratorios, inventos, ensayos,
 financiamiento y lanzamientos — en todos los países, idiomas y
 rubros. Deduplicar, evaluar con UN agente, resumir en español y
 avisar por NTFY. Costo total: $0.
+
+SEÑAL DE ANTICIPACIÓN (fase 4): los proyectos de financiamiento
+con fecha de inicio FUTURA son el corazón de la predicción: el
+radar los detecta meses antes de que arranquen. No se filtran.
 
 2) LÍMITE FÍSICO (aclaración honesta)
 Se monitorea TODO lo público. La investigación confidencial
@@ -49,85 +53,41 @@ exacto este sistema la capta. Cobertura: el universo observable.
   ⏳ EurekAlert! · CERN · Max Planck · CNRS · RIKEN · CAS · CSIC ·
      CONICET · ICGEB · EMBO · IEEE · ACS · RSC
 
-  D. PATENTES (100+ oficinas) ✅ FASE 3 CERRADA — c19 con OPS activa
+  D. PATENTES (100+ oficinas) ✅ FASE 3 CERRADA
   ✅ Google News RSS patentes (2 feeds, keyless, EN PRODUCCIÓN:
-                       15 EN + 10 ES en TODAS las corridas 13-19).
+                       15 EN + 10 ES en TODAS las corridas 13-21).
                        Columna vertebral de patentes "en los medios".
-  ✅ EPO OPS .......... LA FUENTE GLOBAL DE PATENTES — ✅ ACTIVA EN
-                       PRODUCCIÓN DESDE LA CORRIDA 19 (19/10): 25
-                       patentes reales de la subclase IPC B81
-                       (nanotecnología) evaluadas por el agente.
-                       Arquitectura v3.9.4: OAuth Basic→Bearer con
-                       token fresco por corrida; muestreo por UNA
+  ✅ EPO OPS .......... LA FUENTE GLOBAL DE PATENTES — ACTIVA EN
+                       PRODUCCIÓN DESDE LA CORRIDA 19. Índice DOCDB
+                       mundial (~100 oficinas). Muestreo por UNA
                        subclase IPC al azar (ic=XX99 and pd within,
-                       71 subclases curadas A-H, hasta 4 sondeos) —
-                       tajada angosta del flujo semanal MUNDIAL,
-                       siempre bajo el techo duro de 2000 hits por
-                       query (FAQ oficial de la EPO); la página se
-                       pide con el CONSTITUYENTE /biblio (es el que
-                       trae exchange-document con invention-title y
-                       solicitantes — el search pelado solo trae
-                       mini-referencias sin título); lote de 25; el
-                       rango viaja por las dos puertas documentadas
-                       (query param Range + header X-OPS-Range).
-                       El índice de búsqueda es DOCDB: ~100 oficinas
-                       (EP, WO/PCT, US, JP, CN, DE...). Registro
-                       abierto con mail común (developers.epo.org),
-                       gratis hasta 4 GB/semana (fair-use); el radar
-                       usa ~4-5 requests/corrida. La saga completa de
-                       puesta en marcha (4 capas de lección R11) está
-                       aplanada en §10.
-  ⚠️ PatentsView ...... CONGELADA POR USPTO (verificado 17/10): la
-                       migración al Open Data Portal cerró el portal
-                       de keys (Atlassian) y suspendió la emisión de
-                       keys nuevas SIN FECHA; el API viejo está
-                       muerto y las keys viejas no serán compatibles.
-                       El fetcher queda dormido en el repo. Revisar
-                       cuando USPTO lance el API de patentes en ODP
-                       (§13 tiene el link de seguimiento). Mientras
-                       tanto, las concesiones US ya entran vía OPS
-                       (DOCDB las indexa).
-  ❌ Lens.org ......... DESCARTADA (17/10, verificado en el
-                       formulario de registro real): la cuenta
-                       gratuita PERMANENTE exige mail académico
-                       (Académica); Profesional es paga; la Trial
-                       expira en 2 semanas. El fetcher queda dormido
-                       por si algún día cambia el acceso.
-  ⚠️ WIPO PATENTSCOPE .. SIN API PÚBLICA (confirmado por WIPO a sus
-                       propios usuarios): la data se VENDE. La web
-                       gratuita sigue en patentscope.wipo.int para
-                       consultas a mano. Fetcher SOAP solo si WIPO
-                       cambia de postura.
-  ⏳ USPTO ODP ......... la key YA se puede activar (cuenta
-                       USPTO.gov + MFA → Manage API Key → Activate)
-                       PERO el API de búsqueda de patentes AÚN NO
-                       está lanzado (sin fecha). Activarla igual es
-                       gratis: deja el camino preparado para el
-                       relanzamiento.
-  ❌ DESCARTADOS en sondeos (7-13): Google Patents XHR (bot-guard,
-     503 "Sorry..."), Espacenet 3.2 directo (403), Justia RSS
-     (403), API viejo de PatentsView (muerto: hoy sirve la UI del
-     ODP tras AWS WAF), PATENTSCOPE API pública (no existe).
+                       71 subclases curadas A-H, hasta 4 sondeos);
+                       página pedida con el constituyente /biblio;
+                       lote de 25; doble puerta Range. 3 corridas
+                       consecutivas con 25 patentes reales (c19 B81,
+                       c20 C25, c21 C12 — la subclase ROTA). La saga
+                       de puesta en marcha (4 capas de lección R11)
+                       está aplanada en §10.
+  ⚠️ PatentsView ...... CONGELADA POR USPTO (verificado 17/10):
+                       migración al Open Data Portal, portal de keys
+                       cerrado, emisión de keys nuevas SUSPENDIDA
+                       SIN FECHA. El fetcher queda dormido en el
+                       repo. Las concesiones US ya entran vía OPS.
+  ❌ Lens.org ......... DESCARTADA (17/10): la cuenta gratuita
+                       permanente exige mail académico; la Trial
+                       expira en 2 semanas.
+  ⚠️ WIPO PATENTSCOPE .. SIN API PÚBLICA (confirmado por WIPO).
+  ⏳ USPTO ODP ......... key activable, pero el API de búsqueda de
+                       patentes aún no está lanzado (sin fecha).
 
   E. MEDICAMENTOS · ENSAYOS · REGULATORIO ✅ FASE 2 CERRADA
   ✅ ClinicalTrials.gov API v2 ... ~530k estudios, sponsors del mundo
-                       entero. Filtro: fase 2 y 3 + ventana days_back
-                       (LastUpdatePostDate). Sin key, 1 request/corrida
-                       (~150 KB con `fields`).
-  ✅ openFDA ........... 3 entradas, cada una su cupo caps propio:
+                       entero. Filtro: fase 2 y 3 + ventana days_back.
+  ✅ openFDA ........... 3 entradas, cada una con su cupo caps propio:
                        · farmacos  = drug/drugsfda, aprobaciones ORIG
-                         con estado AP (NDA/BLA nuevos + ANDA genéricos;
-                         los SUPPL se descartan: ruido administrativo)
-                       · dispositivos_510k = device/510k, autorizaciones
-                         510(k) (dataset carga ~1x/mes → days_back 35)
-                       · dispositivos_pma = device/pma, aprobaciones PMA
-                         y suplementos (mismo régimen mensual)
-  ⚠️ WHO ICTRP ......... SIN API pública y SIN export directo: el portal
-                       (trialsearch.who.int) es un WebForms sin REST
-                       (Download.aspx = página de test de 1 registro,
-                       export.aspx muerta) y el dataset semanal completo
-                       hoy se entrega SOLO llenando un formulario de WHO
-                       (acceso a carpeta Sharepoint). Ver §10 y §13.
+                       · dispositivos_510k = device/510k
+                       · dispositivos_pma = device/pma
+  ⚠️ WHO ICTRP ......... SIN API pública y SIN export directo.
   ⏳ EMA · WHO PQ · ANVISA · TGA · Health Canada · PMDA
 
   F. BIOSCIENCIAS PROFUNDAS ⏳
@@ -137,50 +97,60 @@ exacto este sistema la capta. Cobertura: el universo observable.
      GitHub API · HN (Algolia) · Product Hunt · crowdfunding ·
      ARPA-E · DARPA · EU EIC · ARIA UK
 
-  H. FINANCIAMIENTO = PREDICCIÓN ⏳ fase 4 — LA SIGUIENTE
-     NIH RePORTER · NSF Awards · SBIR · CORDIS/ERC · UKRI · KAKEN ·
-     ARC · Wellcome · Gates
+  H. FINANCIAMIENTO = PREDICCIÓN ✅ FASE 4 EN CURSO
+  ✅ NIH RePORTER ..... ✅ ACTIVA EN PRODUCCIÓN DESDE LA CORRIDA 21
+                       (21/10): 100 proyectos pedidos, 100 recibidos,
+                       1 con inicio FUTURO detectado. Keyless (sin
+                       secret, patrón OpenAlex). POST-only. Índice
+                       de proyectos financiados por NIH (EE. UU.).
+                       Trampas confirmadas: pedido en PascalCase,
+                       respuesta en snake_case; sort_field=
+                       project_start_date respeta el orden; fiscal
+                       year 2027 = proyectos que arrancan desde
+                       2026-10-01 (señal de anticipación); award_
+                       amount puede venir null. 1 request/corrida.
+  ⏳ CORDIS/ERC ....... registro + API Key (portal de CORDIS)
+  ⏳ UKRI ............. sin Key (a confirmar en sondeo)
+  ⏳ KAKEN ............ solicitar appid vía CiNii (aprobación lenta)
+  ⏳ ARC .............. API pública mencionada; a sondear
+  ⏳ SBIR ............. API en mantenimiento (verificar estado)
+  ⏳ Wellcome · Gates .. a sondear
 
   GEOGRAFÍA/IDIOMAS: los agregadores ya indexan producción de todos
   los países; el agente LLM lee ZH/JA/KO/RU/PT/DE/FR y resume en
   castellano — el multilingüismo NO es barrera. Los ensayos traen
   países de los sites en el resumen y las patentes traen jurisdicción
-  y titulares → región acertada.
+  y titulares → región acertada. NIH RePORTER es EE. UU. por
+  definición (región Norteamerica fija).
 
-4) PIPELINE DIARIO (validado en 19 corridas reales — la 19, primera
-   con EPO OPS activa, salió verde con 25 patentes mundiales:
-   819 fetch → 35 nuevos → 35 al agente → 33 evaluados → persist 2;
-   R13 exacta por QUINTA vez consecutiva y la predicción de la
-   corrida 18 clavó la memoria: 1353 EXACTO. Ver la saga completa
-   en §10)
+4) PIPELINE DIARIO (validado en 21 corridas reales — la 21, primera
+   con NIH RePORTER activo, salió verde con 921 fetch y 1 futuro
+   detectado: 358 nuevos → 194 al agente → 165 evaluados → persist
+   193. R13 cerró exacto por SÉPTIMA vez consecutiva)
 FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERSIST
   • Cron 0 9 * * * (09:00 UTC = 06:00 AR). Botón manual: Actions →
     daily-ingest → Run workflow. DURACIÓN TÍPICA HOY: 1-3 min —
     y eso está BIEN (aritmética completa más abajo, R18).
   • FETCH: cada fuente con try propio — una caída NO frena la
-    corrida. HTTP con reintentos/backoff. Números típicos con fase 3
-    cerrada: openalex 200 · arxiv 100 · rss 182 (incl. Patentes EN 15
-    + ES 10) · clinicaltrials 100 · openfda 20-215 según cargas del
-    mes · epo_ops 0-25 (subclase IPC del día; 0 = ventana de esa
-    subclase vacía o >2000: NORMAL, rota mañana) · patentsview/lens
-    skip (dormidas).
+    corrida. HTTP con reintentos/backoff. Números típicos con fase 4
+    en curso: openalex 200 · arxiv 100 · rss 182 (incl. Patentes EN
+    15 + ES 10) · clinicaltrials 100 · openfda 20-215 · epo_ops
+    0-25 · nih_reporter 0-100 (1-5 futuros típicos en los primeros
+    100). Los fetchers dormidos (patentsview/lens) hacen skip.
   • NORMALIZE: esquema único + id estable con jerarquía (v3.6):
-    id de dominio (nct: / fda: / patent:) > doi:... > sha256 del título
-    normalizado. Los ids de dominio sobreviven a títulos que cambian
-    (un ensayo que se actualiza no renace como ítem nuevo; una patente
-    reindexada tampoco). Fetchers de patentes: patentsview →
-    patent:US<num>, lens → patent:lens:<lens_id>, epo_ops →
-    patent:ops:<cc><num><kind> (p. ej. patent:ops:EP4000000A1).
-  • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra state/seen.json
-    Y dentro de la misma corrida (dos fuentes, misma noticia).
+    id de dominio (nct: / fda: / patent: / grant:) > doi:... >
+    sha256 del título normalizado.
+    epo_ops → patent:ops:<cc><num><kind>; nih_reporter →
+    grant:nih:<project_num>.
+  • DEDUP: id exacto + fuzzy (rapidfuzz >92) contra
+    state/seen.json Y dentro de la misma corrida.
   • CAPS: round-robin entre fuentes + per_source_override (v3.6):
     biosalud a 25/fuente, patentes patentsview/lens/epo_ops a 25,
-    el resto mantiene 50.
-  • EVALUATE: chunks de 20 ítems, ritmo 50s (ver §6). Si un chunk
-    falla, esos ítems quedan fuera de ESTA corrida.
-  • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por score.
-    1 archivo por día: la ÚLTIMA corrida del día es la que queda en
-    main. El git History preserva TODO el histórico.
+    financiamiento nih_reporter a 25, el resto mantiene 50.
+  • EVALUATE: chunks de 20 ítems, ritmo 50s. Si un chunk falla,
+    esos ítems quedan fuera de ESTA corrida.
+  • DIGEST: reports/AAAA-MM-DD.md agrupado por rubro, orden por
+    score. 1 archivo por día: la ÚLTIMA corrida del día gana.
   • NTFY (push diario): top 5 destacados, formato por ítem:
     [score] título original + resumen_es (recortado a 140 chars)
     + URL. Header Click: UN TAP abre el informe del día en GitHub.
@@ -192,73 +162,66 @@ FETCH → NORMALIZE → DEDUP → CAPS → EVALUATE → DIGEST → NTFY → PERS
   fetch ~15-40 s + techo(pool/20) chunks con PAUSA DE 50 s ENTRE
   chunks + ~10-25 s por llamada LLM + commit/push.
     · c13: pool 187 → 10 chunks → 9 pausas × 50 s = 7,5 min SOLO de
-      pausas (más fetch y llamadas) = la era de los 6-8 minutos.
-    · c18: pool 19 → 1 chunk → 0 pausas = 21 SEGUROS, y el ciclo
-      estuvo COMPLETO (todas las fuentes, reporte, ntfy, persist).
+      pausas = la era de los 6-8 minutos.
+    · c18: pool 19 → 1 chunk → 0 pausas = 21 SEGUNDOS, ciclo COMPLETO.
     · c19: pool 35 → 2 chunks → 1 pausa ≈ 2 minutos.
-  Con EPO OPS activa el pool se repone (~25 patentes/día) y las
-  corridas se estabilizan en 1-3 min. UNA CORRIDA CORTA CON EL LOG
-  COMPLETO NO ESTÁ ROTA: se verifican las LÍNEAS, no el cronómetro.
+    · c21: pool 194 → 10 chunks → 9 pausas ≈ 8-10 min. Con NIH y OPS
+      activas el pool se repone (~25 patentes + ~100 proyectos/día)
+      y las corridas se estabilizan en 3-10 min. UNA CORRIDA CORTA
+      CON EL LOG COMPLETO NO ESTÁ ROTA: se verifican las LÍNEAS, no
+      el cronómetro.
 
 5) VOLUMEN Y VÁLVULAS (todo en config/sources.yaml)
   caps.per_source: 50 · caps.total: 300 · threshold: 70/100
   caps.per_source_override: clinicaltrials 25 · openfda-* 25 ·
-                            patentsview 25 · lens 25 · epo_ops 25
+                            patentsview 25 · lens 25 · epo_ops 25 ·
+                            nih_reporter 25
   openalex: days_back 2 · per_page 100 · max_pages 2
   arxiv: max_results 100
   clinicaltrials: days_back 2 · phases [PHASE2, PHASE3] ·
                   max_results 100
-  openfda.farmacos: days_back 15 (lag de publicación ~1 semana,
-                  verificado en vivo) · limit 100
-  openfda.dispositivos_510k / _pma: days_back 35 (carga mensual del
-                  dataset) · limit 100
-  rss.WHO News: max_items 12 (feed histórico gigante)
+  openfda.farmacos: days_back 15 · limit 100
+  openfda.dispositivos_510k / _pma: days_back 35 · limit 100
+  rss.WHO News: max_items 12
   rss.Patentes EN: max_items 15 · rss.Patentes ES: max_items 10
-  patentsview: days_back 7 (USPTO concede los martes: ventana
-               semanal) · max_results 100 — CONGELADA igual
-  lens: days_back 7 (olas de publicación semanales) · max_results
-        100 — DESCARTADA igual
-  epo_ops: days_back 7 (EP y WO publican en olas semanales: toda
-           corrida pesca el boletín) · max_results 25 (lote clásico
-           OPS, capado TAMBIÉN en código) · muestreo: UNA subclase
-           IPC al azar de 71 curadas, hasta 4 sondeos/corrida + 1
-           página del constituyente /biblio → ~4-6 requests/corrida
+  patentsview: days_back 7 · max_results 100 — CONGELADA igual
+  lens: days_back 7 · max_results 100 — DESCARTADA igual
+  epo_ops: days_back 7 · max_results 25 (capado en código) ·
+           muestreo: UNA subclase IPC al azar de 71 curadas, hasta
+           4 sondeos/corrida + 1 página del constituyente /biblio
+  nih_reporter: fiscal_years [2026, 2027] (año actual + siguiente;
+           en 2027 pasar a [2027, 2028]) · max_results 100 ·
+           los proyectos con inicio FUTURO son SEÑAL, no ruido
   notify: top_n 5 · max_bytes 4096
   agent: groq_model "" / github_model "" (vacío = auto-descubre)
-  Cada fetcher fase 3 además acepta enabled: false (válvula de
-  emergencia, como openfda).
+  Cada fetcher fase 3/4 además acepta enabled: false (válvula de
+  emergencia).
 El agente NO resume todo: SELECCIONA lo mejor del día. Más
 cobertura = subir caps/days_back. Menos ruido = subir threshold.
 Nunca más corridas.
+
 6) AGENTE EVALUADOR (v3.3 — anti-rotación, TPM-aware, reasoning-safe)
-  INTACTO desde fase 1: las fases 2, 3, v3.9.x y la activación de OPS
-  no lo tocaron NI una línea. El rubro "patente" ya existía en su
-  vocabulario; desde la corrida 13 recibe noticias de patentes y
-  desde la 19 también patentes CRUDAS de DOCDB — el resumen trae
-  jurisdicción, número, tipo de documento (solicitud A1 / concesión
-  B1 / traducción T / modelo de utilidad U) y solicitantes para que
-  separe patente estratégica de trámite rutinario (25 evaluadas en
-  c19 sin cambio de código).
+  INTACTO desde fase 1: las fases 2, 3, 4, v3.9.x y la activación de
+  OPS y NIH RePORTER no lo tocaron NI una línea. El rubro
+  "financiamiento" ya existía en su vocabulario; desde la corrida 21
+  recibe proyectos NIH con tipo glosado, organización, país, fecha
+  de inicio (con marca FUTURO) y monto — para separar financiamiento
+  estratégico (proyecto nuevo con inicio futuro) de renovación
+  rutinaria (tipo 5, inicio viejo).
   PROVEEDORES (en orden, ambos $0):
     1. Groq ........ GROQ_API_KEY — PRIMARIO (100% de los chunks en
-                     TODAS las corridas con LLM: 7, 11 y 13-19, con
-                     gpt-oss-120b).
-    2. GitHub Models  GITHUB_TOKEN del workflow (models: read) —
-                     FALLBACK. Su /catalog no siempre responde desde
-                     runners → intenta a ciegas openai/gpt-4.1-mini y
-                     openai/gpt-4o-mini.
+                     TODAS las corridas con LLM, con gpt-oss-120b).
+    2. GitHub Models  GITHUB_TOKEN del workflow — FALLBACK.
   AUTO-DESCUBRIMIENTO: catálogo REAL del proveedor UNA vez por
   corrida, elegido por preferencia:
     Groq:  120b → maverick → kimi-k2 → 70b → qwen3-32b → scout → 8b
     GH:    gpt-4.1-mini → gpt-4o-mini → mini → gpt-oss
-  Razón: los catálogos rotan. Nunca hardcodear modelos (R2).
   Override manual opcional: agent.groq_model / agent.github_model.
   RATE LIMIT (lecciones de las corridas 5-7):
     • Free tier Groq: 8.000 tokens/minuto POR MODELO.
     • CHUNK = 20 ítems/llamada (~2.5k tokens) — nunca más grande.
     • Resumen en payload recortado a 200 chars, título a 150.
-    • Pausa 50s entre chunks: cero 429 en corridas 7, 11 y 13-19.
-      (Es TAMBIÉN el reloj dominante de la duración: ver §4, R18.)
+    • Pausa 50s entre chunks: cero 429 en corridas 7, 11 y 13-21.
     • Ante 429: espera 65s y reintenta ×3.
     • Cascada: hasta 3 modelos de Groq por chunk.
     • max_tokens salida: 4000.
@@ -268,88 +231,64 @@ Nunca más corridas.
   JSON (defensa en profundidad):
     • Prompt prohíbe markdown y ```. Parseo tolerante a fences.
     • Array truncado → regex de rescate: salvó lo parseable en TODAS
-      las corridas con truncados (c13: 12/12, 15/15, 8/8, 19/19 ·
-      c14: 40/40 · c15-c18: 11/11, 18/18, 13/13, 8/8) y los faltantes
-      reintentan (R5). En c19 NO hubo truncados: 18/20 en el chunk 1
-      (los 2 sin veredicto vuelven mañana) y 15/15 en el chunk 2.
+      las corridas con truncados. En c21: chunks 3 (3/3) y 9 (8/8)
+      truncados; el resto 20/20 o 14/14.
   SALIDA: SIEMPRE español. Por ítem: score 0-100 + rubro + región +
   resumen_es. Rubros: investigacion | preprint | descubrimiento |
   patente | salud | tech | financiamiento | otro
   Regiones: America Latina | Norteamerica | Europa | Asia | Africa |
             Oceania | Global
-  FASE 2: los ítems de ensayos llegan con estado, condición,
-  intervención, sponsor, N y países en el resumen; los FDA con
-  tipo (NDA/BLA/ANDA/510k/PMA), sponsor y vía. Con eso el agente
-  separa genérico rutino de novedad real sin ningún cambio de
-  código en evaluator.py (v3.3 intacto).
-  FASE 3: idéntico — las patentes llegan con jurisdicción, número,
-  kind glosado y solicitantes en el resumen; el rubro "patente" ya
-  estaba en su vocabulario desde el día 1.
 
 7) SEGURIDAD (estado real)
   • Secrets en GitHub Secrets:
-      NTFY_TOPIC ......... CREADO y PROBADO (valor NO documentado)
+      NTFY_TOPIC ......... CREADO y PROBADO
       GROQ_API_KEY ....... CREADO y VALIDADO
       OPS_CONSUMER_KEY ... ✅ CREADO y VALIDADO EN PRODUCCIÓN
-                           (corrida 19: token OAuth OK, fuente
-                           activa con 25 ítems)
       OPS_CONSUMER_SECRET  ✅ CREADO y VALIDADO EN PRODUCCIÓN
-                           (ídem; par inseparable: uno sin el otro
-                           no autentica)
-      PATENTSVIEW_API_KEY  CONGELADO — NO crear por ahora: el portal
-                           de keys está cerrado por la migración ODP
-                           (crear secret sin key no rompe nada, pero
-                           tampoco sirve)
-      LENS_API_TOKEN ..... DESCARTADO — sin mail académico no existe
-                           cuenta gratuita permanente
-      NTFY_TOKEN ......... opcional, no creado (blindaje: topic reservado)
+      PATENTSVIEW_API_KEY  CONGELADO — NO crear por ahora
+      LENS_API_TOKEN ..... DESCARTADO — sin mail académico
+      NTFY_TOKEN ......... opcional, no creado
   • GITHUB_TOKEN: automático del workflow, mapeado en el env del
     step. Permisos: contents: write + models: read.
+  • NIH RePORTER: NO requiere secret (keyless, patrón OpenAlex).
   • ntfy.sh público: topic largo + aleatorio + jamás documentado.
   • NTFY TÉCNICO: headers latin-1 → Title como RFC 2047; emojis solo
-    en el cuerpo UTF-8 (lección corrida 6, validada corrida 7).
-  • Polite pool: polite_email en sources.yaml (dejar el real si ya
-    está; al pegar el yaml nuevo NO pisarlo con el placeholder).
+    en el cuerpo UTF-8.
+  • Polite pool: polite_email en sources.yaml.
   • Las keys de patentes NUNCA van en el código ni en el yaml:
-    solo en Secrets (R15). OPS usa PAR key+secret: DOS secrets
-    separados con nombres exactos.
+    solo en Secrets (R15). OPS usa PAR key+secret.
   • No es asesoramiento financiero/médico: prioriza, vos decidís.
 
 8) ESTRUCTURA (real, en el repo)
 global-research-radar/
 ├─ .github/workflows/daily-ingest.yml  ← cron + botón manual +
 │                                         mapeo de secrets en env
-│                                         (v3.9: + OPS_CONSUMER_KEY
-│                                         + OPS_CONSUMER_SECRET)
 ├─ config/sources.yaml                 ← TODO el radar se controla acá
 ├─ src/
 │  ├─ config.py          carga del YAML
-│  ├─ smoke.py           prueba de los 8 fetchers sin agente
-│  ├─ fetchers/          common.py (GET/POST + diagnóstico),
+│  ├─ smoke.py           prueba de los 9 fetchers sin agente
+│  ├─ fetchers/          common.py (GET/POST/post_json + diagnóstico),
 │  │                     openalex.py, arxiv.py, rss_generic.py,
-│  │                     clinicaltrials.py (fase 2),
-│  │                     openfda.py (fase 2: 3 endpoints),
-│  │                     patentsview.py (dormida: USPTO congelada),
-│  │                     lens.py (dormida: descartada sin mail
-│  │                     académico),
-│  │                     epo_ops.py (v3.9.4: EPO OPS ACTIVA —
-│  │                     OAuth + subclase IPC aleatoria +
-│  │                     constituyente /biblio + techo 2000 +
-│  │                     parser biformato; la saga completa en §10)
-│  ├─ pipeline/          normalize.py (ids de dominio v3.6: nct:/fda:/
-│  │                     patent:), dedup.py, caps.py (override v3.6)
+│  │                     clinicaltrials.py, openfda.py,
+│  │                     patentsview.py (dormida),
+│  │                     lens.py (dormida),
+│  │                     epo_ops.py (ACTIVA desde c19),
+│  │                     nih_reporter.py (ACTIVA desde c21 — v3.10:
+│  │                     fetch(cfg, state), keyless, fiscal_years,
+│  │                     futuros como señal)
+│  ├─ pipeline/          normalize.py (ids de dominio: nct:/fda:/
+│  │                     patent:/grant:), dedup.py, caps.py
 │  ├─ agent/             evaluator.py (v3.3 TPM + reasoning aware —
 │  │                     INTACTO desde fase 1)
 │  └─ notify/            ntfy.py (Title RFC 2047 + header Click)
 ├─ run.py                orquestador completo + persist selectivo +
 │                          push compacto (top 5, resumen 140) + Click
-│                          (v3.9: dispatch de 8 fetchers)
+│                          (v3.10: dispatch de 9 fetchers)
 ├─ state/seen.json       memoria permanente (se commitea cada corrida;
 │                          autolimitada a 100k registros ≈ 7 meses)
-├─ reports/              AAAA-MM-DD.md por corrida — fuente completa;
-│                          1 archivo/día, histórico en git History
+├─ reports/              AAAA-MM-DD.md por corrida — fuente completa
 ├─ requirements.txt      requests, PyYAML, feedparser, rapidfuzz
-└─ MANUAL-global-research-radar.txt   ← este archivo (v3.11)
+└─ MANUAL-global-research-radar.txt   ← este archivo (v3.12)
 
 9) OPERACIÓN — CHULETA (síntomas reales, no teóricos)
   • Correr manual: Actions → daily-ingest → Run workflow → Run.
@@ -357,348 +296,125 @@ global-research-radar/
       fetch total: N → dedup: X nuevos / Y vistos → caps: A → B →
       groq: catálogo OK (1 vez) → agente servido por Groq (modelo) →
       agente: chunk i/j → reporte escrito → ntfy: enviado → push 📱
-  • La corrida dura 1-3 min (aritmética §4/R18): fetch + pausas de
-    50 s entre chunks. Una corrida de 21 s - 2 min con el log
-    completo (todas las fuentes → dedup → caps → chunks → reporte →
-    ntfy → persist) es SANA, no rota. El cronómetro no es un
-    indicador; las LÍNEAS sí.
-  • Líneas de epo_ops ACTIVA (v3.9.4, verificadas en producción c19):
-      epo_ops: N ítems (subclase IPC XX99, página X-Y de Z en
-        AAAAMMDD → AAAAMMDD; M refs sin título descartadas) ..
-        FUENTE ACTIVA. X-Y cambia entre corridas (sampling
-        aleatorio — correcto); Z = hits de ESA subclase, siempre
-        ≤ 2000 (techo de la EPO por query); M = 0 es perfecto,
-        un % alto de M = R11 (la EPO cambió el XML: revisar
-        _parsear_biblio y ajustar)
-      epo_ops — XX99: NNN resultados supera el techo de 2000 hits
-        de la EPO; pruebo otra subclase ......... NORMAL (rota)
-      epo_ops — sin subclase con ítems esta corrida (...): NORMAL,
-        mañana rota otra ......................... ventana de las
-        4 subclases sin fruto (0 resultados o páginas vacías):
-        no error
-      epo_ops — sondeo XX99 falló (...) — pruebo otra subclase ..
-        fallo de red/HTTP transitorio: NO corta la corrida (R6)
-      epo_ops — XX99: N hits, página X-Y sin ítems (...); cuerpo:
-        ............................................ LUPA R11
-        INTEGRADA: el cuerpo de la respuesta queda en el log y la
-        fuente prueba la siguiente subclase. Si se ve: pegá el log
-        completo y lo leemos juntos
-      RuntimeError "epo_ops sin subclase viable" .. SOLO si TODAS
-        las subclases fallaron con error de red: la corrida sigue
-        (R6) y mañana reintenta
-      epo_ops 401 en la autenticación ... secret mal pegado: revisar
-        que OPS_CONSUMER_KEY y OPS_CONSUMER_SECRET no estén
-        invertidos ni con espacio en los extremos
-      epo_ops 403 "Fair Use" .... demasiados requests: no debería
-        verse (~5/corrida); si se ve, revisar que no haya un loop
-        de reintento agresivo
-      epo_ops: sin OPS_CONSUMER_KEY/... — skip ..... si vuelve a
-        verse con la fuente ya activada: alguien borró/renombró
-        los secrets — recrearlos con nombres EXACTOS (§13)
+  • La corrida dura 1-3 min (aritmética §4/R18). El cronómetro no es
+    un indicador; las LÍNEAS sí.
+  • Líneas de nih_reporter ACTIVA (v3.10, verificadas en c21):
+      nih_reporter: POST fiscal_years=[2026, 2027] limit=100
+      nih_reporter: 100 resultados (total=69610)
+      nih_reporter: 100 ítems (1 con inicio FUTURO)
+        → el "N con inicio FUTURO" es la señal de anticipación: si N
+        crece con los días, subir max_results a 200-300. Si N = 0
+        varios días, revisar el orden (sort_field) contra el sondeo
+        curl del §10.
+      nih_reporter: N resultados (total=0) .... año fiscal vacío:
+        normal, rota al año siguiente en el yaml.
+      nih_reporter: respuesta vacía o error — 0 ítems .... API caída
+        o cambio de esquema (R11): revisar el log de post_json con
+        el body; la corrida sigue (R6).
+      nih_reporter: N refs sin título/número descartadas .. normal,
+        se cuentan; si % alto → R11.
+      nih_reporter falló (fetch() missing 1 required positional
+        argument: 'state') .... lección c20: el dispatch de run.py
+        pasa (cfg, state), no solo cfg. Los fetchers nuevos se
+        firman con fetch(cfg, state=None).
   • Síntomas y significado exacto (heredados):
       openalex: 0 ítems ....... revisar polite_email
       rss: falló (404) ........ URL muerta → cambiar en yaml
-      arxiv: 429/503 .......... rate limit de arXiv; en runners
-                                sí corre (visto solo desde IPs
-                                compartidas en pruebas locales)
+      arxiv: 429/503 .......... rate limit de arXiv
       openfda: "0 eventos en la ventana" .... día sin aprobaciones
-                                nuevas: NORMAL (404 vacío), no error
       clinicaltrials: 0 ítems . ventana sin actualizaciones fase 2-3
-                                (fines de semana): normal
       rss:Patentes EN 0 ítems . Google News a veces achica la query
-                                when:3d: normal si ES trae ítems; si
-                                fallan los dos días seguidos, revisar
-                                la URL del feed en el yaml
-      patentsview 400 ......... el esquema del API nuevo cambió
-                                (R11) — hoy IRRELEVANTE: fuente
-                                congelada hasta que USPTO rearme
-      HTTP 400 en openFDA ..... esquema cambió (R11): revisar campos
-                                contra 1 registro real (limit=1 sin
-                                search) y ajustar el fetcher
-      404 model_not_found ..... el código ya se defiende; si se
-                                viera, cambiar PREF_GROQ
+      patentsview 400 ......... fuente congelada (irrelevante)
+      HTTP 400 en openFDA ..... esquema cambió (R11)
+      404 model_not_found ..... cambiar PREF_GROQ
       "JSON truncado — salvé N/M objetos" .. defensa funcionando
       latin-1 codec error ..... emojis en headers → ntfy.py viejo
       push cortado ............ fix v3.4 activo (top 5, 140 chars)
-      IndentationError ........ pegado parcial de un .py → R1:
-                                reemplazar el archivo COMPLETO
+      IndentationError ........ pegado parcial de un .py → R1
       corrida manual el mismo día . el reporte del día se regenera
-                                (última gana); git History preserva.
       sin push, corrida verde . normal: nada superó el umbral
-      510k/PMA: 0 ítems varios días . normal: el dataset carga ~1x/
-                                mes; el resto del radar sigue vivo
+      510k/PMA: 0 ítems varios días . normal: carga ~1x/mes
+      epo_ops: ver §10 (saga OPS) para las líneas específicas
 
 10) BITÁCORA DE PUESTA EN MARCHA (por qué el código es como es)
-  [Fase 1 — corridas 1 a 11: ver git History de este archivo / v3.5.
-   Hitos: OpenAlex paginación por página numérica; GITHUB_TOKEN en
-   env del step; auto-descubrimiento de modelos (R2); CHUNK 20 + 429
-   backoff + cascada (v3.2); reasoning_effort=low + salvamento JSON +
-   Title RFC 2047 (v3.3); push compacto + Click + R1 reforzada
-   (v3.4/v3.5); corrida 11 verde perfecta 52/52 → FASE 1 CERRADA.]
-  FASE 2 (biosalud) — puesta en marcha por sondeos en vivo (8 rondas
-  de probes contra las APIs reales antes de escribir código):
-    Sondeo 1-3: CT.gov v2 OK (1.413 estudios fase 2-3/semana); los
-      paths de `fields` van en lowercase JSON (400 con camelCase de
-      módulo). openFDA: el sort anidado está prohibido (400); el '+'
-      dentro del rango rompe el parser (500 parse_exception); con
-      espacios + dash-dates 510k/PMA responden (37 y 20 registros en
-      lo que va de octubre).
-    Sondeo 4-6: drugsfda respondía 404 A TODO (hasta Pfizer): el
-      esquema cambió con el refresh del 14/10 — el campo es
-      submissions.submission_status_date (YYYYMMDD) y los estados son
-      códigos AP/TA, no "Approved". Con eso: 81 eventos octubre, ~300-
-      400/mes. ICTRP: sin REST (/api 404), export.aspx muerta,
-      Download.aspx = test de 1 registro con login test/test.
-    Sondeo 7-8 + web: el export semanal de ICTRP hoy se entrega
-      SOLO por formulario de acceso a Sharepoint (no es $0 ni
-      programático). La página de descargas de WHO carga los zips por
-      JS (Kendo) sin endpoint público. drugsfda: lag de publicación
-      ~1 semana (eventos se cortan ~9-12/10 estando a 17/10). 510k/
-      PMA: carga mensual (datos hasta ~5/10, next ~5/11).
-  DECISIONES DE DISEÑO FASE 2:
-    • ids de dominio (nct:/fda:) para que una actualización de un
-      ensayo no entre como ítem nuevo (normalize v3.6).
-    • per_source_override en caps: 25 para biosalud sin tocar las
-      50 de fase 1; sin el bloque, el camino clásico queda byte a
-      byte (guard explícito + test de regresión local).
-    • farmacos = solo ORIG con estado AP (los SUPPL de labeling/
-      CMC son ruido); ANDA (genéricos) entra: es un evento real y
-      el agente lo puntúa bajo el umbral.
-    • ventanas anchas (15/35 días) en vez de trabajos mensuales
-      manualmente: la dedup cobra cada decisión UNA vez y la regla
-      anti-pérdida hace la cola (~25/día) hasta tragar la carga.
-    • WHO News RSS (max_items 12) compensa parte de la cobertura
-      WHO que deja ICTRP gateado, a costo 0 y 1 línea de yaml.
-    • Validación local completa antes de subir: compile + unit
-      tests de caps/normalize + smoke en vivo de 5 fetchers +
-      mini-pipeline de 2 pasadas con regla anti-pérdida verificada.
-  FASE 3 (patentes) — sondeos 1-10 en dos sesiones (antes de escribir
-  una línea de código, igual que fase 2):
-    Sondeo 1-3 (sesión 1): Google Patents XHR responde 200 pero
-      total=0 con q=(a), q=the y fechas publication/priority/filing
-      (dentro de q y como parámetro aparte); al 5º request: 503
-      "Sorry..." — bot-guard de Google. Nunca dio UN resultado válido.
-    Sondeo 4: Espacenet 3.2 rest-services (UI de EPO): 403. Lens sin
-      token: 401 limpio ("Missing/Incorrect Authorization Header").
-      WIPO api.wipo.int/patentscope-apis: 404 "No context-path
-      matches". PatentsView nuevo: DNS inalcanzable desde el sandbox.
-    Sondeo 5-6: api.patentsview.org (el API viejo) responde 200 pero
-      con HTML de la nueva UI del "Open Data Portal" detrás de un AWS
-      WAF — el API viejo está MUERTO. Google News RSS patentes: vivo.
-    Sondeo 7-8 (sesión 2): Google XHR 503 "Sorry..." en TODAS las
-      variantes (q=(a), q=the, after=publication/priority, exp=,
-      Referer) — confirmado bot-guard de IP, no error de sintaxis.
-      Espacenet 403. WIPO: 404 también en /patentscope/ y en el
-      WSDL SOAPSearchService.
-    Sondeo 9: el cuerpo HTML de api.patentsview.org confirma: "The
-      Open Data Portal (ODP) is USPTO's data platform..." — el dominio
-      viejo fue repurposed por la USPTO.
-    Sondeo 10 + web: Justia RSS 403. Google News RSS patentes: 200
-      con 66 ítems EN / 12 ES frescos (query refinada sin ruido
-      vehicular; "Tesla patenta una piel táctil...", "Sony vende
-      patentes VR a Meta"). Lens con token basura: 401 "Unable to
-      authorize" — confirma esquema Bearer. Docs verificadas en 3
-      fuentes: PatentsView nuevo = POST /api/v1/patent/ + X-Api-Key
-      (patent_number pasó a patent_id); Lens = POST /patent/search +
-      Bearer + include=/campos + 404 = vacío. Web: el USPTO ODP exige
-      cuenta USPTO.gov + key (desde 18/6/2026 login obligatorio; keys
-      desactivadas el 8/10/2026 por perfiles incompletos).
-      PATENTSCOPE: SOAP + registro WIPO.
-  DECISIONES DE DISEÑO FASE 3:
-    • La era keyless de las patentes TERMINÓ: todo lo estructurado
-      (PATENTSCOPE, PatentsView, Lens, EPO OPS, ODP) exige cuenta+key
-      gratuita. Patrón elegido: fetcher escrito UNA vez + skip
-      silencioso sin secret → ACTIVAR = crear el secret, cero código
-      (mismo patrón que NTFY_TOKEN/GROQ_API_KEY).
-    • Columna vertebral keyless mientras tanto: Google News RSS
-      patentes EN+ES (2 líneas de yaml) — compensa como WHO News
-      compensó ICTRP.
-    • ids de dominio patent: (patentsview → patent:US<num>, lens →
-      patent:lens:<lens_id>): estables ante reindexaciones.
-    • caps.per_source_override: patentsview 25 · lens 25 (el resto
-      intacto; sin overrides el camino clásico queda byte a byte —
-      test de regresión local de nuevo).
-    • days_back 7 en ambas: el USPTO concede los martes y las
-      oficinas publican en olas semanales; la dedup cobra cada
-      concesión UNA vez.
-    • evaluador v3.3 INTACTO: el rubro "patente" ya estaba en su
-      vocabulario; el resumen de las patentes trae jurisdicción,
-      titular e inventores para separar estrategia de trámite.
-    • Validación local completa antes de pegar: compile + 6 unit
-      tests (caps override fase 3 + clásico, normalize patent:,
-      skip silencioso, mini-pipeline 2 pasadas + anti-pérdida) +
-      smoke en vivo de 7 fetchers (795 fetch: Patentes EN 15 + ES 10)
-      + mini-pipeline 1 pasada con datos vivos y seen.json real en
-      solo lectura: 695 fetch → 349 nuevos → 188 al agente, 25 de
-      patentes. seen.json NUNCA se tocó en las pruebas.
-  FASE 3 EN PRODUCCIÓN (v3.9) — sondeos 11-13 y verificación de
-  cuentas (con la era keyless terminada, la CUENTA es la frontera
-  real de cada fuente):
-    Corrida 13 (real, producción): VERDE A LA PRIMERA — 795 fetch
-      (Patentes EN 15 + ES 10 reales), 348 nuevos, 187 al agente,
-      161 evaluados (R13 cerró exacto: 12+15+20+20+20+20+20+8+19+7;
-      persist 187 = 348−161), ntfy 1390 bytes, 4 chunks truncados
-      con rescate completo de lo parseable. Baseline de observación:
-      persist 187 < 234 (corrida 12) → el pool empieza ABAJO.
-    Corrida 14 (real, producción): VERDE — 795 fetch otra vez
-      (mismas fuentes, cero ruido), 218 nuevos (−130: la dedup cobra
-      y se agota el backlog del arranque), 122 al agente, 102
-      evaluados (R13 exacto: 12+9+20+19+20+20+2; chunk 7 = 122−120
-      = 2), persist 116 = 96 cortados por caps + 20 de truncado.
-      Pool: 234 → 187 → 116 (−71 en un día). HALLAZGO c14: la línea
-      "memoria: 1039" implica estado previo 821, y 1008 − 187 = 821
-      EXACTO → seen.json se commitea y recarga sin perder NI UN
-      registro: la persistencia entre corridas quedó verificada en
-      producción, no solo en tests.
-    Sondeo 11 (web): PatentsView CONGELADA A PROPÓSITO — la
-      transition-guide oficial de USPTO confirma: migración de
-      PatentsView al Open Data Portal (arrancó 20/3/2026), Service
-      Desk de Atlassian CERRADO, emisión de keys nuevas SUSPENDIDA,
-      keys viejas no compatibles con ODP, y el API de búsqueda de
-      patentes en ODP SIN FECHA de relanzamiento.
-    Sondeo 12 (web + formulario de registro real): Lens — la cuenta
-      gratuita permanente (Académica) EXIGE mail de institución con
-      verificación; Trial = 2 semanas y muere; Profile Builder no
-      da API; Profesional = paga. Para este radar: DESCARTADA.
-      PATENTSCOPE: WIPO confirmó a sus usuarios que NO hay API
-      pública — la data se vende. DESCARTADA como fuente $0.
-    Sondeo 13 (en vivo): EPO OPS VIVO Y ABIERTO — search sin auth:
-      403 "Fair Use policy" (pide credenciales = servicio vivo);
-      auth sin client id: 401 "Client identifier is required";
-      developers.epo.org/user/register: 200 (registro abierto con
-      mail común). Fair-use de la EPO: gratis hasta 4 GB/semana.
-      Cuenta pedida el 17/10 → PENDIENTE de habilitación por la EPO.
-  DECISIONES DE DISEÑO v3.9:
-    • OPS = reemplazo global de Lens: el índice de búsqueda es DOCDB
-      MUNDIAL (~100 oficinas: EP, WO/PCT, US, JP, CN, DE...) —
-      corrección de la doc interna (corrida 17 lo probó con 86502
-      resultados en 7 días); la descripción "EP+WO" correspondía al
-      retrieval, no al search. Las concesiones US entran SIN
-      PatentsView.
-    • Sampling ALEATORIO: el search de OPS no documenta sort por
-      fecha — la página 1 devolvería siempre la misma cabeza del
-      índice, la dedup la absorbería y el flujo NUNCA avanzaría.
-      Hoy: sondeo del total (Range 1-1 en el search pelado) +
-      subclase IPC aleatoria + página aleatoria de 25. Cada corrida
-      toma una tajada distinta del flujo mundial; la dedup cobra
-      cada publicación UNA vez en la vida (espíritu R12: muestreo
-      honesto, no rastreo exhaustivo que el cupo caps 25 no usaría).
-    • Token OAuth fresco por corrida (Basic key:secret → Bearer,
-      expira ~20 min): cero estados que pudrirse entre corridas.
-    • XML con comodines {*} por tag: si la EPO renombra un namespace
-      el parser no se rompe (R11). Docs sin título se descartan y se
-      CUENTAN en el log (normalize exige título+url) — si el % de
-      descartados subiera, se recalibra contra el esquema real.
-    • El abstract NO se baja (sería 1 request extra por documento):
-      el resumen lleva jurisdicción, número, kind GLOSADO (A1 =
-      publicación de solicitud, B1 = patente concedida, etc.) y
-      solicitantes — el agente separa estrategia de trámite sin
-      tocar evaluator.py. Enriquecer con abstracts = posible v2 si
-      el log en vivo lo justifica.
-    • Validación local completa antes de pegar: compile + 27 checks
-      (config v3.9, skip sin secrets ×2, XML sintético con
-      namespaces reales: total/docs/título-EN-preferido/solicitantes/
-      kinds/urls, sampling 2000 tiradas + bordes, caps override 25,
-      dedup 2 pasadas con ids patent:ops:, anti-pérdida) + smoke en
-      vivo de 8 fetchers: 795 fetch y epo_ops skip limpio. El
-      seen.json real NUNCA se tocó (estado temporal aparte).
-
-  LA SAGA EPO OPS EN PRODUCCIÓN (corridas 15-19, todas del 19/10) —
-  la lección R11 aplanada en CUATRO CAPAS: cada corrida destapó la
-  falla que la anterior no podía ver. Moraleja estructural: los
-  sondeos sin credenciales reales validan la PUERTA, no el salón —
-  solo la producción con la cuenta real enseña el camino completo.
-    Capa 1 — AUTH ENMASCARADA (c15): con credenciales reales, el
-      POST de token dio 400 "Required param : grant_type": el código
-      enviaba data="" (body vacío). Los sondeos sin credenciales
-      nunca lo vieron: la EPO valida el Basic ANTES que el body y
-      el 401 del Basic enmascaraba el error. FIX v3.9.1:
-      grant_type=client_credentials form-encoded en el body (forma
-      literal de la doc oficial, RFC 6749). Lección: un 401 temprano
-      puede estar tapando un 400 posterior.
-    Capa 2 — VENTANA VACÍA (c16): la auth v3.9.1 pasó limpia, pero
-      el índice contestó 404 + fault SERVER.EntityNotFound "No
-      results found". NO es error: es la forma ESTÁNDAR de OPS de
-      decir "búsqueda sin resultados" — la ventana de 2 días había
-      caído sábado→lunes y EP/WO publican en días fijos de la
-      semana (~mié/~jue). FIX v3.9.2: ese 404 = 0 resultados y la
-      fuente termina feliz (como openFDA en día sin carga);
-      days_back 2→7 (toda corrida pesca el boletín semanal); techo
-      del parámetro Range en el registro 2000. Lección: un 404 de
-      búsqueda es DATO, no falla — y una ventana más angosta que la
-      cadencia de publicación siempre devuelve vacío.
-    Capa 3 — TECHO DE QUERY (c17): con la ventana de 7 días el total
-      explotó a 86502 hits y la EPO devolvió el total pero CERO
-      documentos (ops:search-result es opcional en el XSD). FAQ
-      oficial de la EPO: "OPS can only display a total of 2 000
-      results. If there are more than 2 000 hits in your results
-      list, you will have to limit your search query" — el techo es
-      de la QUERY ENTERA, no del Range. FIX v3.9.3: muestreo por
-      SUBCLASE IPC aleatoria (ic=XX99 and pd within "...", 71
-      subclases curadas A-H, hasta 4 sondeos) — tajada angosta del
-      flujo mundial, siempre bajo el techo; si la elegida da 0 o
-      supera 2000, el log lo dice y rota. BONUS: el índice resultó
-      MUNDIAL (DOCDB), lo que cubrió el hueco de concesiones US que
-      dejó PatentsView congelada. Lección: un "total enorme" con
-      cero documentos es un TECHO, no una cola.
-    Capa 4 — FORMATO DEL SEARCH (c18): la subclase C22 dio 610 hits
-      (el sondeo v3.9.3 funcionó: total bajo el techo) pero la
-      página 47-146 volvió "0 ítems; 0 docs sin título" OTRA VEZ.
-      Causa raíz verificada en CUATRO fuentes independientes (FAQ
-      oficial de la EPO + cliente Python de referencia ip-tools +
-      cliente Go + ejemplo vivo en un blog técnico): el search PELO
-      trae ops:search-result > ops:publication-reference >
-      document-id = mini-referencias docdb SIN título (campos como
-      ELEMENTOS hijos), NUNCA exchange-document — el parser buscaba
-      lo que nunca estuvo ahí (corridas 17 y 18 con total > 0 y 0
-      docs visibles). La bibliografía completa (invention-title +
-      solicitantes) viene del CONSTITUYENTE /biblio en el path:
-      published-data/search/biblio?q=... FIX v3.9.4: (1) la página
-      pide .../search/biblio (el sondeo total sigue en el search
-      pelado, respuesta mínima); (2) el rango viaja por las dos
-      puertas documentadas (query param Range + header X-OPS-Range);
-      (3) lote capado a 25 (default documentado y ya era el caps
-      override); (4) parser biformato (exchange-document primero,
-      mini-referencias de reserva); (5) página sin ítems deja el
-      CUERPO de la respuesta en el log (R11 integrada al fetcher) y
-      prueba la siguiente subclase — el "0 ítems feliz" de c18
-      abortaba las otras 3 sin avisar. Lección: el FORMATO de la
-      respuesta es parte del esquema: un endpoint que responde 200
-      puede estar traendo la estructura equivocada.
-    CIERRE — CORRIDA 19 VERDE (quinta del 19/10, primera con OPS
-      activa de verdad): "epo_ops: 25 ítems (subclase IPC B81,
-      página 11-35 de 38 en 20261012 → 20261019; 0 refs sin título
-      descartadas)". Decodificación: la subclase B81 (nanotecnología)
-      tuvo 38 publicaciones en la ventana de 7 días; el sampler
-      tomó una tajada aleatoria de 25 (posiciones 11-35); TODAS con
-      título y solicitantes (0 descartadas). R13 cerró exacto por
-      QUINTA vez consecutiva: fetch 819 = 200 openalex + 100 arxiv +
-      182 rss + 100 CT + 212 openfda + 25 epo_ops ✓ · dedup 35+784
-      = 819 ✓ · memoria 1388 y la cadena 1388−35 = 1353 = 1364−11
-      (c18) ✓ — y la PREDICCIÓN hecha al cierre de c18 ("memoria =
-      1353 + nuevos") CLAVÓ el número · caps 35→35 (epo_ops entró
-      entera: 25 ≤ override 25; fuentes=4 con nuevos) · chunks 2 =
-      techo(35/20) ✓ · veredictos 18+15 = 33 = "33 de 35" ✓ ·
-      persist 2 = 35−33 (los 2 sin veredicto del chunk 1 vuelven
-      mañana, R5) ✓ · ntfy 1454 B ✓. Las 25 patentes entraron al
-      agente SIN un cambio de código en evaluator.py (rubro
-      "patente" desde el día 1, kind glosado, solicitantes en el
-      resumen). FASE 3 CERRADA.
-    DURACIÓN — la pregunta que destapó una regla (corridas 18-19):
-      el usuario preguntó si algo se rompió cuando la corrida bajó
-      de 6-8 min a 21 segundos, o si "solo corrió para chequear EPO".
-      NADA se rompió y NO corrió solo EPO: el log de c18 mostraba el
-      ciclo COMPLETO (todas las fuentes con sus conteos, 1 chunk,
-      reporte, ntfy, persist). La duración es aritmética (R18): los
-      6-8 min históricos eran pools de 187-234 → 7-10 chunks → 6-9
-      PAUSAS DE 50 s (hasta 7,5 min solo de pausas) + llamadas LLM +
-      fetch; c18 (pool 19 → 1 chunk → 0 pausas) = 21 s; c19 (pool 35
-      → 2 chunks → 1 pausa) ≈ 2 min. Corrida corta con el log
-      completo = sistema SANO; el cronómetro no es un indicador.
+  [Fases 1-3: ver git History de este archivo / v3.11. Hitos:
+   OpenAlex paginación por página numérica; auto-descubrimiento de
+   modelos (R2); CHUNK 20 + 429 backoff (v3.2); reasoning_effort=low
+   + salvamento JSON (v3.3); push compacto + Click (v3.4/v3.5);
+   FASE 2 con clinicaltrials + openfda (corrida 12); FASE 3 con
+   Google News patentes + EPO OPS activa (corrida 19); la saga OPS
+   de 4 capas (c15-c19, v3.9.1→v3.9.4) aplanada en v3.11.]
+  FASE 4 (financiamiento/predicción) — sondeos en vivo ANTES de
+  escribir una línea de código (metodología fases 2 y 3):
+    Sondeo 1 (21/10, curl): POST a reporter.nih.gov/v2/projects/
+      search con criteria {fiscal_years:[2026], advanced_text_search
+      projecttitle:"cancer"}, include_fields PascalCase, limit 3.
+      Respuesta: total 4417, 3 proyectos. La API está viva y es
+      keyless. TRAMPA: la respuesta viene en snake_case (project_num,
+      project_title, fiscal_year, award_amount) aunque el pedido va
+      en PascalCase. Los include_fields en snake_case se ignoran
+      SILENCIOSAMENTE (devuelve todo el payload, gigante).
+    Sondeo 2 (21/10, curl): fiscal_years [2025, 2026], + Project
+      StartDate + Organization. Respuesta: total 145943. La
+      organización trae org_name + org_country (para región) y
+      project_start_date trae fecha (pero incluye proyectos viejos:
+      2016). Decisión: ordenar por sort_field para no traer ruido.
+    Sondeo 3 (21/10, curl): sort_field=project_start_date,
+      sort_order=desc, limit 3. Respuesta: total 69556, primer
+      resultado 2027-03-02 (proyecto con inicio FUTURO). HALLAZGO:
+      el sort SÍ se respeta. TRAMPA: hay proyectos con fecha de
+      inicio futura (aprobados pero sin arrancar) — son SEÑAL de
+      anticipación, no ruido. Decisión: NO filtrarlos, priorizarlos.
+    Sondeo 4 (21/10, curl): fiscal_years [2027], limit 5. Respuesta:
+      total 54 (el año fiscal 2027 arranca el 2026-10-01). Los
+      primeros resultados tienen project_start_date 2026-10-01,
+      2026-09-30. TRAMPA: award_amount null en varios proyectos
+      nuevos (monto aún no cargado) → tolerar null.
+  DECISIONES DE DISEÑO FASE 4:
+    • Fetcher keyless (patrón OpenAlex): sin secret, sin skip
+      silencioso. Se activa con solo agregarlo al dispatch de run.py
+      y al yaml.
+    • id de dominio grant:nih:<project_num>: estable ante
+      renovaciones (el sufijo -05 de renovación no cambia el id
+      base). La dedup cobra cada proyecto UNA vez.
+    • fiscal_years [2026, 2027] hardcodeado en el yaml (auditable,
+      fácil de cambiar a mano en 2027). El fetcher tiene fallback
+      automático (año actual + siguiente) si el yaml no trae la
+      clave.
+    • Tipo glosado del project_num: primer dígito 1=nuevo,
+      5=renovación, etc. El agente separa estrategia de trámite.
+    • Los proyectos con inicio FUTURO van marcados "FUTURO" en el
+      resumen que recibe el agente → el score los prioriza.
+    • 1 request/corrida (como CT.gov): POST con limit 100, offset 0.
+      No hay paginación: el sort desc garantiza que los primeros 100
+      son los más nuevos + los futuros del año.
+  CORRIDA 20 (21/10, primer intento con NIH): VERDE PERO CON BUG —
+    el fetcher falló: "fetch() missing 1 required positional
+    argument: 'state'". Causa: run.py despacha (cfg, state), pero
+    nih_reporter.fetch() se escribió con (cfg). El try/except de R6
+    atrapó el fallo y la corrida siguió: 821 fetch (sin NIH), 422
+    nuevos, 251 al agente, 173 evaluados (R13 exacto por SEXTA vez),
+    persist 249. epo_ops: 25 ítems (subclase C25, página 288-312 de
+    333). LECCIÓN (R19 candidata): los fetchers nuevos se firman con
+    fetch(cfg, state=None) porque el dispatch de run.py es uniforme.
+  FIX (21/10, v3.10): nih_reporter.fetch(cfg, state=None) — cambio
+    de una línea en la firma + docstring explicativo. Todo lo demás
+    idéntico.
+  CORRIDA 21 (21/10, NIH activo): VERDE — "nih_reporter: POST
+    fiscal_years=[2026, 2027] limit=100" → "100 resultados (total=
+    69610)" → "100 ítems (1 con inicio FUTURO)". fetch 921 = 821 +
+    100 ✓ · dedup 358 nuevos / 563 vistos (memoria 2030 = 1921 +
+    109 reintentados ✓) · caps 358 → 194 con fuentes=14 y override
+    nih_reporter: 25 ✓ · chunks 10 = techo(194/20) ✓ · veredictos
+    165 de 194 (chunks 3 y 9 truncados: 3/3 y 8/8; resto 20/20 o
+    14/14) · persist 193 = 358 − 165 ✓ · ntfy 1477 B ✓ · epo_ops:
+    25 ítems (subclase C12, página 238-262 de 1454 — la subclase
+    ROTÓ por tercera corrida consecutiva). R13 exacto por SÉPTIMA
+    vez. La señal de anticipación está viva: 1 proyecto con inicio
+    FUTURO detectado en el primer lote de 100.
 
   REGLAS DEL PROYECTO (aprendidas en vivo):
-    R1. Archivos Python se pegan COMPLETOS, de una sola vez
-        (Ctrl+A → pegar). Nunca por fragmentos.
+    R1. Archivos Python se pegan COMPLETOS, de una sola vez.
     R2. Nunca hardcodear nombres de modelos: consultar catálogo real.
     R3. El free tier manda el ritmo: dosis pequeña + pausa larga.
     R4. Todo error HTTP loguea status + cuerpo — nunca fallar a ciegas.
@@ -707,226 +423,188 @@ global-research-radar/
     R7. Los reasoning models (gpt-oss) queman tokens de salida
         pensando: reasoning_effort=low o el JSON se trunca.
     R8. Los headers HTTP solo admiten latin-1: emojis fuera de los
-        headers (Title viaja RFC 2047; emoji solo en el cuerpo).
+        headers.
     R9. El push es un teaser, no el informe: compacto por diseño.
     R10. El reporte diario se regenera (última gana); el git
          History es el archivo histórico.
-    R11. Las APIs cambian de esquema SIN AVISAR (openFDA drugsfda
-         14/10/2026): campos verificados en vivo; 404 masivo =
-         sospechar esquema, no vacío. Loguear status+cuerpo (R4).
-         La saga OPS (§10) lo confirmó en CUATRO capas: auth
-         enmascarada → ventana vacía → techo de query → formato del
-         search. El cuerpo de la respuesta es la única verdad.
-    R12. Los datasets regulatorios tienen lag (drugsfda ~1 semana,
-         510k/PMA ~1 mes): ventanas anchas + dedup, nunca rastrear
-         "lo nuevo de hoy" en fuentes que no lo tienen.
-    R13. El log debe cerrar aritmético (validado en corridas 12-19):
-         evaluados = suma de chunks · persist = nuevos − evaluados ·
-         chunks = techo(ítems_agente/20) · y la memoria ENCADENA
-         corridas: memoria_hoy − nuevos_hoy = memoria_ayer −
-         persist_ayer. Cadena EXACTA cinco veces consecutivas
-         (c15→c19): 1351−90=1261 ✓ · 1354−42=1312 ✓ · 1357−12=1345
-         ✓ · 1364−11=1353 ✓ · 1388−35=1353 ✓. Si no cierra,
-         hay bug: no lo ignores.
-    R14. Endpoint no oficial (XHR de UI) que no da NI UN resultado
-         válido en sondeos = bot-guard garantizado: no entra al
-         radar (lección Google Patents XHR, Espacenet, Justia).
+    R11. Las APIs cambian de esquema SIN AVISAR. El cuerpo de la
+         respuesta es la única verdad.
+    R12. Los datasets regulatorios tienen lag: ventanas anchas +
+         dedup, nunca rastrear "lo nuevo de hoy".
+    R13. El log debe cerrar aritmético: evaluados = suma de chunks
+         · persist = nuevos − evaluados · chunks = techo(ítems_
+         agente/20) · memoria_hoy − nuevos_hoy = memoria_ayer −
+         persist_ayer. Cadena EXACTA siete veces consecutivas
+         (c15→c21).
+    R14. Endpoint no oficial que no da NI UN resultado válido en
+         sondeos = bot-guard garantizado: no entra al radar.
     R15. Fuente con key gratis: el fetcher se escribe UNA vez y se
          activa con el secret — jamás keys en el código ni en el
-         yaml (R2 extendida a los fetchers).
-    R16. 404 en Lens = resultado vacío (doc oficial), igual que
-         openFDA: día sin eventos, no error.
+         yaml.
+    R16. 404 en Lens = resultado vacío.
     R17. Antes de prometer una fuente, verificar el FORMULARIO DE
-         REGISTRO real (no la doc ni los blogs): ahí se ve si la
-         cuenta $0 existe de verdad (lección 17/10: Lens exige mail
-         académico en su registro; EPO OPS acepta mail común).
+         REGISTRO real.
     R18. La duración de una corrida es ARITMÉTICA, no un síntoma:
-         fetch (~15-40 s) + techo(pool/20) chunks × 50 s de pausa
-         ENTRE chunks + ~10-25 s por llamada LLM. Corrida corta con
-         el log completo = SANA (c18: 21 segundos, ciclo completo);
-         los 6-8 min históricos eran pools de 7-10 chunks (hasta
-         7,5 min SOLO de pausas). Verificar las LÍNEAS del log,
-         nunca el cronómetro (lección corridas 18-19).
+         fetch + techo(pool/20) chunks × 50 s + LLM. Verificar las
+         LÍNEAS del log, nunca el cronómetro.
+    R19 (nueva). Los fetchers nuevos se firman fetch(cfg, state=
+         None): el dispatch de run.py es uniforme y pasa (cfg, state)
+         a TODOS. Si el fetcher no usa state, se acepta e ignora
+         (lección corrida 20, bug de NIH).
 
 11) PLAN DE FASES (regla: la siguiente solo cuando la anterior
     corre limpia y sin duplicados)
-  FASE 1 (núcleo) .... ✅ CERRADA Y OPERATIVA — corrida 11 verde
-                       (2026-10-15). Modo automático desde el 16.
-  FASE 2 (biosalud) .. ✅ CERRADA Y VALIDADA EN PRODUCCIÓN — corrida
-                       12 verde a la primera (2026-10-16): 670 fetch,
-                       118/139 evaluados, 234 al persist, 7 chunks.
-                       ClinicalTrials.gov v2 + openFDA (3 endpoints)
-                       + WHO News RSS. WHO ICTRP ⚠️ gateado por WHO
-                       (formulario + Sharepoint): ver §13 para pedir
-                       acceso; el fetcher se agrega en 1 pasada si
-                       algún día hay fuente $0.
-  FASE 3 (inventos) .. ✅ CERRADA Y VALIDADA EN PRODUCCIÓN — corrida
-                       19 (2026-10-19): EPO OPS ACTIVA con 25
-                       patentes reales de DOCDB (subclase IPC B81,
-                       nanotecnología) evaluadas por el agente SIN
-                       tocar evaluator.py; R13 exacta por quinta vez
-                       consecutiva. Keyless estable desde c13: Google
-                       News patentes EN+ES (15+10 todas las corridas).
-                       PatentsView ⚠️ congelada por USPTO (sin
-                       fecha), Lens ❌ descartada (sin mail
-                       académico), PATENTSCOPE ⚠️ sin API pública.
-                       La saga de puesta en marcha de OPS (c15-c19,
-                       cuatro capas de lección R11) quedó aplanada en
-                       §10. Deuda cosmética para la próxima ronda de
-                       pegado (con fase 4): el comentario de epo_ops
-                       en sources.yaml sigue diciendo "EP + WO" — el
-                       índice es DOCDB mundial (código correcto, solo
-                       el comentario quedó viejo).
-  FASE 4 (predicción)  ⏳ SIGUIENTE — FUENTES DE FINANCIAMIENTO:
-                       NIH RePORTER · NSF Awards · SBIR · CORDIS/ERC
-                       · UKRI · KAKEN · ARC · Wellcome · Gates.
-                       Misma metodología que fases 2 y 3: sondeos en
-                       vivo de cada API ANTES de escribir una línea
-                       de código (R11/R17); ids de dominio nuevos
-                       (grant:...); caps override propio; evaluador
-                       v3.3 intacto (el rubro "financiamiento" ya
-                       está en su vocabulario).
+  FASE 1 (núcleo) .... ✅ CERRADA — corrida 11 verde (2026-10-15).
+  FASE 2 (biosalud) .. ✅ CERRADA — corrida 12 verde (2026-10-16).
+  FASE 3 (inventos) .. ✅ CERRADA — corrida 19 verde (2026-10-19):
+                       EPO OPS activa con 25 patentes reales; 3
+                       corridas consecutivas con subclase rotando.
+  FASE 4 (predicción)  ⏳ EN CURSO — NIH RePORTER ✅ ACTIVO desde
+                       corrida 21 (2026-10-21). PENDIENTE de la
+                       misma fase: CORDIS/ERC (registro + API Key),
+                       UKRI (a sondear), KAKEN (appid vía CiNii),
+                       ARC (a sondear), SBIR (API en mantenimiento),
+                       Wellcome/Gates (a sondear). Metodología
+                       idéntica: sondeos curl en vivo ANTES de
+                       escribir código (R11/R17); ids de dominio
+                       grant:<fuente>:<id>; caps override 25;
+                       evaluador v3.3 intacto (rubro
+                       "financiamiento" ya existe).
   FASE 5 (tech) ...... ⏳ GitHub + HN + Product Hunt + crowdfunding
 
-12) CHECKLIST (actualizado v3.11)
+12) CHECKLIST (actualizado v3.12)
 [x] Repo público global-research-radar creado
-[x] Manual actualizado (este archivo, v3.11)
-[x] Secret NTFY_TOPIC creado y probado (push OK; valor no documentado)
+[x] Manual actualizado (este archivo, v3.12)
+[x] Secret NTFY_TOPIC creado y probado
 [x] Workflow permissions: read and write
 [x] Código fase 1 completo — corrida 11 verde
 [x] Secret GROQ_API_KEY creado y validado
 [x] GITHUB_TOKEN mapeado en env del workflow
-[x] Agente v3.3 validado (corridas 7 y 11) — INTACTO en fases 2 y 3
-[x] ntfy.py: Title RFC 2047 + header Click — validado en teléfono
+[x] Agente v3.3 validado — INTACTO en fases 2, 3 y 4
+[x] ntfy.py: Title RFC 2047 + header Click — validado
 [x] Push compacto anti-corte (top 5, 140 chars) — verificado
-[x] Regla anti-pérdida validada en 4 corridas + tests locales 2 y 3
-[x] FASE 2: fetchers clinicaltrials.py + openfda.py calibrados con
-    8 sondeos en vivo — corrida 12 verde a la primera
+[x] Regla anti-pérdida validada en 7 corridas + tests locales
+[x] FASE 2: fetchers clinicaltrials.py + openfda.py — corrida 12
 [x] FASE 2: ids de dominio nct:/fda: + caps.per_source_override
-[x] FASE 3: 10 sondeos en vivo documentados (Google XHR bot-guard,
-    Espacenet/Justia 403, PatentsView viejo muerto, Lens 401/404-doc,
-    ODP con cuenta, PATENTSCOPE SOAP)
-[x] FASE 3: fetchers patentsview.py + lens.py escritos (key opcional
-    por secret, patrón NTFY_TOKEN) + skip silencioso verificado
-[x] FASE 3: Google News patentes EN/ES en sources.yaml (keyless vivo)
-[x] FASE 3: ids patent: + caps override patentsview/lens 25
-[x] FASE 3: workflow mapea PATENTSVIEW_API_KEY y LENS_API_TOKEN
-[x] CORRIDA 13 (prueba de fase 3): VERDE — 795 fetch, Patentes EN 15
-    + ES 10 reales, caps override visible en el log, R13 cerró exacto
-    (12+15+20+20+20+20+20+8+19+7 = 161; persist 187 = 348−161),
-    ntfy 1390 bytes OK; los 26 truncados reintentaron (R5)
-[x] CORRIDA 14: VERDE — 795 fetch, 218 nuevos, 122 al agente, 102
-    evaluados (12+9+20+19+20+20+2; persist 116 = 218−102), memoria
-    encadenó exacta entre corridas (821 = 1008−187 = 1039−218),
-    ntfy 1296 bytes OK; 20 truncados reintentan (R5); pool
-    234→187→116
-[x] Sondeos 11-13: PatentsView congelada por USPTO (ODP sin fecha),
-    Lens descartada sin mail académico (verificado en su registro),
-    PATENTSCOPE sin API pública, EPO OPS viva y de registro abierto
-[x] v3.9: fetcher epo_ops.py (OAuth Basic→Bearer, XML con {*},
-    sampling aleatorio, kind glosado A1/B1) + cableado completo
-    (run.py 8 fetchers, smoke.py, sources.yaml, workflow 2 secrets)
-[x] v3.9: validación local verde — compile + 27 checks (config, skip
-    silencioso, XML sintético realista, sampling, caps, dedup 2
-    pasadas, anti-pérdida) + smoke en vivo de 8 fetchers (795 fetch,
-    epo_ops skip limpio); seen.json real jamás tocado
-[x] SAGA OPS (c15-c19): 4 capas de lección R11 resueltas con 4 fixes
-    — v3.9.1 auth (grant_type en el body) · v3.9.2 ventana vacía
-    (404 = vacío, days_back 7, techo Range) · v3.9.3 techo de query
-    (subclase IPC aleatoria) · v3.9.4 formato del search
-    (constituyente /biblio + doble puerta Range + parser biformato
-    + cuerpo en el log) — aplanada en §10
-[x] CORRIDA 19: VERDE — EPO OPS ACTIVA: "epo_ops: 25 ítems (subclase
-    IPC B81, página 11-35 de 38 en 20261012 → 20261019; 0 refs sin
-    título descartadas)", fetch 819, R13 exacta QUINTA vez (1388−35
-    = 1353 = 1364−11; la predicción de c18 clavó 1353), chunks 2,
-    veredictos 33 de 35, persist 2, ntfy 1454 B — FASE 3 CERRADA
+[x] FASE 3: 10 sondeos en vivo documentados
+[x] FASE 3: fetchers patentsview.py + lens.py (dormidos)
+[x] FASE 3: Google News patentes EN/ES (keyless vivo)
+[x] FASE 3: ids patent: + caps override 25
+[x] CORRIDA 13 (prueba de fase 3): VERDE — 795 fetch, 15+10
+    patentes reales, R13 exacto
+[x] CORRIDA 14: VERDE — memoria encadenó exacta
+[x] Sondeos 11-13: PatentsView congelada, Lens descartada,
+    PATENTSCOPE sin API, EPO OPS viva
+[x] v3.9: fetcher epo_ops.py + cableado completo
+[x] SAGA OPS (c15-c19): 4 capas de R11 resueltas (v3.9.1→v3.9.4)
+[x] CORRIDA 19: VERDE — EPO OPS ACTIVA (subclase B81, 25 ítems)
 [x] ACTIVACIÓN EPO OPS — HECHA (corrida 19): los DOS secrets
-    (OPS_CONSUMER_KEY + OPS_CONSUMER_SECRET) activaron la fuente
-    solos, sin tocar código ni workflow (R15 cumplida a la letra)
-[x] R18 (nueva): la duración de una corrida es aritmética — corrida
-    corta con el log completo = sana (lección c18-c19, §4 y §10)
+    activaron la fuente solos, sin tocar código (R15 cumplida)
+[x] R18 (nueva): duración = aritmética (c18-c19)
+[x] FASE 4: 4 sondeos curl en vivo documentados (NIH RePORTER):
+    API viva, keyless, sort respetado, futuros como señal, null
+    tolerado
+[x] FASE 4: fetcher nih_reporter.py escrito (v3.10: fetch(cfg,
+    state=None), keyless, fiscal_years, futuros como señal, tipo
+    glosado)
+[x] FASE 4: common.py con post_json + get_logger (sin tocar lo
+    existente)
+[x] FASE 4: sources.yaml con bloque nih_reporter + override 25
+[x] FASE 4: run.py y smoke.py con nih_reporter en el dispatch (9
+    fetchers)
+[x] CORRIDA 20: VERDE PERO CON BUG — nih_reporter falló por firma
+    (fetch() missing 'state'); R6 evitó que cortara la corrida
+[x] FIX v3.10: nih_reporter.fetch(cfg, state=None) — una línea
+[x] CORRIDA 21: VERDE — NIH ACTIVO: "100 resultados (total=69610)"
+    y "100 ítems (1 con inicio FUTURO)"; fetch 921; R13 exacto
+    SÉPTIMA vez; persist 193; epo_ops subclase C12 (rotó)
+[x] R19 (nueva): fetch(cfg, state=None) para fetchers nuevos
+[ ] FASE 4 pendiente: sondeos en vivo de CORDIS/ERC · UKRI · KAKEN
+    · ARC · SBIR · Wellcome · Gates (metodología idéntica a NIH)
 [ ] Semana de observación: cada día mirar UNA línea — "persist: N
     ítems sin veredicto". Protocolo:
-    · corridas 13-19: persist 187 → 116 → 90 → 42 → 12 → 11 → 2
-      (pool drenado). Con EPO activa el pool se repone ~25/día
-      (patentes) + la carga normal de las demás fuentes: esperar
-      persist estabilizándose en ~20-60 — SI crece 3+ días seguidos
-      → el pool se ahoga: bajar per_source en sources.yaml o subir
-      threshold
-    · arxiv 429 dos días seguidos → sources.yaml: arxiv
-      days_back: 2 → 4 (seguro gratis: dedup absorbe duplicados)
-    · rss Patentes EN/ES caídos 2 días seguidos → revisar URL del
-      feed (Google News a veces recicla la query)
-    · epo_ops: verificar que la subclase IPC ROTIÉ entre corridas
-      (mismo XX99 dos días seguidos sería raro pero posible:
-      random.sample de 71 — solo alarmarse con un patrón fijo)
+    · corridas 13-21: persist 187 → 116 → 90 → 42 → 12 → 11 → 2 →
+      249 → 193 (el pool se repone con OPS + NIH activos). Esperar
+      persist estabilizándose en ~50-150; SI crece 3+ días seguidos
+      → el pool se ahoga: bajar per_source o subir threshold
+    · nih_reporter: si "N con inicio FUTURO" es 0 varios días
+      seguidos → subir max_results a 200-300 (más futuros en el lote)
+    · arxiv 429 dos días seguidos → days_back 2 → 4
+    · rss Patentes EN/ES caídos 2 días seguidos → revisar URL
+    · epo_ops: verificar que la subclase IPC ROTE entre corridas
+      (B81 → C25 → C12 en c19-c21: rota bien)
 [ ] Ajuste fino threshold/caps SOLO con datos reales de la semana
-    (nunca a ojo después de una sola corrida)
-[ ] FASE 4 (financiamiento): sondeos en vivo de NIH RePORTER · NSF
-    Awards · CORDIS/ERC (+ UKRI/KAKEN/ARC/Wellcome/SBIR) ANTES de
-    escribir código; después ronda de pegado (incluye corregir el
-    comentario cosmético de epo_ops en sources.yaml)
-[ ] (opcional) Revisar PatentsView cuando USPTO ODP lance su API de
-    patentes — link de seguimiento en §13
+[ ] FASE 4 (continuación): CORDIS/ERC requiere registro + API Key
+    → anotar en §13 la guía paso a paso (como se hizo con EPO OPS)
+[ ] FASE 4 (continuación): KAKEN requiere appid vía CiNii
+[ ] (opcional) Revisar PatentsView cuando USPTO ODP lance su API
 [ ] (opcional) WHO ICTRP: formulario de WHO para el Sharepoint
-[ ] (opcional) Retención 180 días de reports/ (ver §13, snippet listo)
+[ ] (opcional) Retención 180 días de reports/ (snippet en §13)
 [ ] (opcional) Blindaje ntfy: topic reservado + secret NTFY_TOKEN
 
 13) EXTRAS LISTOS PARA ACTIVAR (fases futuras)
-  KEYS DE PATENTES — estado real v3.11 (verificado en producción):
-    1) EPO OPS — ✅ ACTIVA DESDE LA CORRIDA 19: los DOS secrets
-       creados y validados en producción (token OAuth OK, 25
-       patentes/corrida con ~4-6 requests: ilegiblemente lejos del
-       fair-use de 4 GB/semana). Guía dejada como historia por si
-       hiciera falta recrear: developers.epo.org → login → My Apps
+  KEYS DE PATENTES — estado real v3.12:
+    1) EPO OPS — ✅ ACTIVA DESDE LA CORRIDA 19. Guía de recreación
+       por si hiciera falta: developers.epo.org → login → My Apps
        → definir app → copiar Consumer Key y Consumer Secret →
        GitHub → Settings → Secrets and variables → Actions → New
        repository secret ×2, nombres EXACTOS:
          OPS_CONSUMER_KEY
          OPS_CONSUMER_SECRET
-       Si la fuente volviera a decir "skip" con la cuenta ya
-       activada: alguien borró/renombró un secret — recrearlos con
-       esos nombres EXACTOS (sin tocar código: ya está mapeado).
-    2) PatentsView (USPTO): CONGELADO — NO perder tiempo. El portal
-       de keys (patentsview-support.atlassian.net) está CERRADO por
-       la migración al Open Data Portal y la emisión de keys nuevas
-       está SUSPENDIDA sin fecha. Para seguir el estado:
-       https://data.uspto.gov/support/transition-guide/patentsview —
-       cuando ODP lance su API de patentes: cuenta USPTO.gov + MFA
-       → Manage API Key → Activate → avisar y el fetcher se
-       recalibra en 1 pasada (el patrón X-Api-Key ya está escrito).
-       Mientras tanto las concesiones US entran vía EPO OPS (DOCDB).
-    3) Lens.org: DESCARTADO sin mail académico — la cuenta gratuita
-       permanente (Académica) exige verificación institucional, la
-       Trial muere en 2 semanas y Profesional es paga. Si algún día
-       hay mail académico: cuenta Académica → perfil → API tokens →
-       Patent API (no comercial) → secret LENS_API_TOKEN (nombre
-       EXACTO, ya mapeado en el workflow).
-    4) WIPO PATENTSCOPE: SIN API pública (la data se vende; WIPO lo
-       confirmó). La web sigue gratis en patentscope.wipo.int para
-       consultas a mano. Fetcher SOAP solo si WIPO cambia de postura.
-    5) USPTO ODP (reserva): la key YA se puede activar gratis
-       (cuenta USPTO.gov + MFA → Open Data Portal → Manage API Key
-       → Activate) aunque el API de búsqueda de patentes aún no
-       está lanzado — activarla deja el camino preparado.
+    2) PatentsView (USPTO): CONGELADO — NO perder tiempo.
+       Seguimiento: https://data.uspto.gov/support/transition-guide/
+       patentsview — cuando ODP lance su API de patentes: cuenta
+       USPTO.gov + MFA → Manage API Key → Activate → avisar y el
+       fetcher se recalibra en 1 pasada.
+    3) Lens.org: DESCARTADO sin mail académico.
+    4) WIPO PATENTSCOPE: SIN API pública.
+    5) USPTO ODP (reserva): key activable pero API de patentes sin
+       lanzar.
     NOTA: crear un secret NO toca código — el workflow ya mapea
     PATENTSVIEW_API_KEY, LENS_API_TOKEN, OPS_CONSUMER_KEY y
     OPS_CONSUMER_SECRET desde v3.9.
+  FUENTES DE FINANCIAMIENTO — estado real v3.12:
+    1) NIH RePORTER — ✅ ACTIVA DESDE LA CORRIDA 21. Keyless (sin
+       secret). No requiere registro. Si la API devolviera 0 varios
+       días: revisar fiscal_years en sources.yaml (en 2027 pasar a
+       [2027, 2028]) o subir max_results.
+    2) CORDIS/ERC (UE) — ⏳ PENDIENTE DE REGISTRO. Requiere
+       registrarse en el portal de CORDIS para obtener una API Key
+       gratuita. La Comisión Europea se reserva el derecho de
+       suspender el acceso si se abusa. Pasos (a confirmar en el
+       registro real, R17):
+         a) Ir al portal de desarrolladores de CORDIS (buscar
+            "CORDIS API key registration").
+         b) Registrarse con mail común (verificar que acepte, R17).
+         c) Copiar la API Key → GitHub → Settings → Secrets →
+            New repository secret con nombre EXACTO:
+              CORDIS_API_KEY
+         d) El fetcher se escribe UNA vez y se activa solo con el
+            secret (patrón R15).
+    3) UKRI GtR (Reino Unido) — ⏳ A SONDear. Sin Key según la
+       documentación (licencia Open Government Licence). Confirmar
+       con un curl como el de NIH antes de escribir código.
+    4) KAKEN (Japón) — ⏳ PENDIENTE DE REGISTRO. Requiere solicitar
+       un appid a través de CiNii. La aprobación puede tardar.
+       Pasos (a confirmar, R17):
+         a) Ir a CiNii (buscar "CiNii API appid registration").
+         b) Solicitar el appid con mail común.
+         c) Copiar el appid → GitHub Secrets con nombre EXACTO:
+              KAKEN_APPID
+    5) ARC (Australia) — ⏳ A SONDear. La página oficial menciona
+       una API pública (formato JSON). Buscar el endpoint en la
+       página de "Grants Dataset" y confirmar con curl.
+    6) SBIR (EE. UU.) — ⚠️ API EN MANTENIMIENTO. El sitio oficial
+       muestra un aviso. Verificar estado antes de escribir código.
+    7) Wellcome / Gates — ⏳ A SONDear. Sin documentación pública
+       clara de API; confirmar antes de prometer.
   WHO ICTRP — pedir acceso (opcional, manual, gratis):
     https://www.who.int/tools/clinical-trials-registry-platform
-    → "Fill this form to request access to the Sharepoint folder for
-    downloading all new/updated records from the ICTRP". Con acceso
-    concedido, el dataset semanal se descarga y se filtra por fecha
-    de registro con parseo streaming (iterparse) — diseño listo,
-    esperar la fuente.
+    → "Fill this form to request access to the Sharepoint folder".
   RETENCIÓN 180 DÍAS de reports/ — reemplazar el paso "Commit de
   memoria e informes" del workflow por este bloque cuando se quiera:
       - name: Commit de memoria e informes
         run: |
-          # retención: eliminar informes con más de 180 días
-          # (por fecha del NOMBRE — NO find -mtime: el checkout
-          # de Actions renueva los mtimes de todos los archivos)
           cutoff=$(date -d "-180 days" +%Y-%m-%d)
           for f in reports/????-??-??.md; do
             [ -e "$f" ] || continue
@@ -941,33 +619,28 @@ global-research-radar/
           git add state/seen.json reports/ || true
           git diff --cached --quiet || git commit -m "radar: corrida $(date -u +%F)"
           git push
-  Nota: borrar un reporte del main NO borra su pasado — la versión
-  sigue en el git History. seen.json además se autolimita solo
-  (MAX_SEEN = 100.000 registros ≈ 7 meses a este volumen).
   BLINDAJE NTFY (opcional): cuenta gratis en ntfy.sh → reservar el
-  topic → crear access token → secret NTFY_TOKEN (ntfy.py ya lo
-  soporta: si el secret existe, agrega Authorization Bearer).
+  topic → crear access token → secret NTFY_TOKEN.
 
-Día cerrado (19/10, corrida 19). Balance v3.11: FASE 3 CERRADA CON
-LA CORONA PUESTA. EPO OPS quedó activa en producción y su saga de
-puesta en marcha (corridas 15-19, las cinco del mismo día) es la
-lección R11 más dura y más valiosa del proyecto: auth enmascarada →
-ventana vacía → techo de query → formato del search. Cuatro capas,
-cuatro fixes (v3.9.1 → v3.9.4), una corrida verde: 25 patentes
-reales de nanotecnología (subclase IPC B81, índice DOCDB mundial)
-evaluadas por el agente sin tocar evaluator.py NI UNA línea. La
-aritmética cerró exacta por QUINTA vez consecutiva y la predicción
-de la corrida anterior (memoria 1353) clavó el número: el sistema
-se verifica a sí mismo. Y la pregunta del usuario ("¿21 segundos?
-¿algo se rompió?") destapó una regla propia que ahora es R18: la
-duración de una corrida es aritmética (pools grandes = muchas
-pausas de 50 s) y una corrida corta con el log completo es un
-sistema sano, no roto. El radar bucea HOY: papers (OpenAlex +
-arXiv), prensa científica (8 RSS), patentes (Google News EN/ES +
-EPO OPS mundial), ensayos (ClinicalTrials.gov) y regulatorio
-(openFDA ×3) — todo $0. Pendiente único de código: FASE 4
-(financiamiento) — arrancamos con sondeos en vivo de NIH RePORTER,
-NSF Awards y CORDIS/ERC antes de escribir una línea, como siempre.
-Mañana, chequeo nuevo del protocolo: la línea "dedup" debe decir
-memoria: 1386 + nuevos del día (1388 − 2 de persist de hoy). Si no
-da eso, avisar.
+Día cerrado (21/10, corridas 20-21). Balance v3.12: FASE 4 EN CURSO
+CON LA PRIMERA FUENTE DE FINANCIAMIENTO ACTIVA. NIH RePORTER quedó
+en producción en la corrida 21: 100 proyectos pedidos, 100
+recibidos, 1 con inicio FUTURO detectado — la señal de anticipación
+que motivó la fase 4 está viva. La corrida 20 sirvió de lección: el
+fetcher se escribió con fetch(cfg) y el dispatch de run.py pasa
+(cfg, state); el try/except de R6 atrapó el fallo y la corrida
+siguió sin NIH, lo que permitió ver el bug en producción sin perder
+el día. El fix fue una línea (fetch(cfg, state=None)) y quedó
+anotado como R19. La aritmética cerró exacta por SÉPTIMA vez
+consecutiva y la subclase IPC de OPS rotó por tercera corrida
+seguida (B81 → C25 → C12), lo que confirma que el sampling
+aleatorio funciona. El radar bucea HOY: papers (OpenAlex + arXiv),
+prensa científica (8 RSS), patentes (Google News EN/ES + EPO OPS
+mundial), ensayos (ClinicalTrials.gov), regulatorio (openFDA ×3) y
+financiamiento (NIH RePORTER) — todo $0. Pendiente de código:
+completar fase 4 con CORDIS/ERC (registro + API Key), UKRI (a
+sondear), KAKEN (appid vía CiNii), ARC (a sondear) y SBIR
+(verificar mantenimiento) — arrancamos con sondeos en vivo, como
+siempre. Mañana, chequeo nuevo del protocolo: la línea "dedup" debe
+decir memoria: 1837 + nuevos del día (2030 − 193 de persist de
+hoy). Si no da eso, avisar.
