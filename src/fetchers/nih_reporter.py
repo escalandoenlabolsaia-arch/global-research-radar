@@ -61,8 +61,13 @@ def _es_futuro(iso: str | None, hoy: dt.date) -> bool:
         return False
 
 
-def fetch(cfg: dict, state: dict) -> list[dict]:
-    """Devuelve la lista de ítems normalizados de NIH RePORTER."""
+def fetch(cfg: dict, state: dict | None = None) -> list[dict]:
+    """Devuelve la lista de ítems normalizados de NIH RePORTER.
+
+    `state` se acepta por compatibilidad con el dispatch de run.py (los
+    fetchers de fase 2/3 lo reciben), pero NIH no lo usa: cada corrida
+    es independiente y la dedup se encarga de no repetir.
+    """
     if not cfg.get("enabled", True):
         log.info("nih_reporter: deshabilitado en sources.yaml — skip")
         return []
